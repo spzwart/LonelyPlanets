@@ -80,7 +80,7 @@ class PlanetarySystemIntegrationWithPerturbers(object):
         planets = minor_bodies[minor_bodies.type=="planet"]
         asteroids = minor_bodies-planets
         get_orbital_elements_of_planetary_system(parent_star, planets)
-        print(planets.semimajor_axis.in_(units.au))
+        #print(planets.semimajor_axis.in_(units.au))
         
     def print_status(self):
         stars = self.particles[self.particles.type=="star"]
@@ -98,7 +98,6 @@ class PlanetarySystemIntegrationWithPerturbers(object):
         else:
             self.stellar_code = None
     def start_gravity_code(self):
-        print(self.particles)
         self.gravity_code = Huayno(convert_nbody=self.converter,
                                    mode="openmp",
                                    redirection="none")
@@ -119,8 +118,8 @@ class PlanetarySystemIntegrationWithPerturbers(object):
         print("Evolve to", model_time.in_(units.Myr))
         
         self.model_time = self.perturber_list[self.perturber_list_index][0].age
-        print("Current model time=", self.model_time.in_(units.Myr))
-        print("Evolve to time=", model_time.in_(units.Myr))
+        #print("Current model time=", self.model_time.in_(units.Myr))
+        #print("Evolve to time=", model_time.in_(units.Myr))
         while self.model_time<model_time:
 
             print("time=", self.model_time.in_(units.Myr))
@@ -140,7 +139,7 @@ class PlanetarySystemIntegrationWithPerturbers(object):
         print("evolve from", self.model_time.in_(units.Myr),
               "to ", self.get_next_perturber_time().in_(units.Myr),
               "index=", self.perturber_list_index)
-        print("pos=", self.model_time.in_(units.Myr), self.particles.x.in_(units.pc))
+        #print("pos=", self.model_time.in_(units.Myr), self.particles.x.in_(units.pc))
         if self.stellar_code != None:
             self.stellar_code.evolve_model(self.model_time)
             self.from_stellar.copy()
@@ -157,7 +156,7 @@ class PlanetarySystemIntegrationWithPerturbers(object):
 
         self.model_time = self.get_current_perturber_time()
         print("Evolution done, current index=", self.perturber_list_index)
-        print("pos=", self.model_time.in_(units.Myr), self.particles.x.in_(units.pc))
+        #print("pos=", self.model_time.in_(units.Myr), self.particles.x.in_(units.pc))
 
     def get_parent_star(self):
         star = self.particles[self.particles.name=="Sun"]
@@ -198,7 +197,7 @@ class PlanetarySystemIntegrationWithPerturbers(object):
         star = pstars[pstars.name=="Sun"][0].copy()
         self.particles.add_particle(star)
         
-        print("N==", len(pstars), dt_perturbation.in_(units.Myr))
+        #print("N==", len(pstars), dt_perturbation.in_(units.Myr))
         if self.nperturbers<0:
             self.nperturbers = len(pstars)-1
         if self.nperturbers>len(pstars)-1:
@@ -214,11 +213,11 @@ class PlanetarySystemIntegrationWithPerturbers(object):
         
         perturbers = self.perturber_list[self.perturber_list_index]
         star = perturbers[perturbers.name=="Sun"][0]
-        print("perturbed stars position=", star.x.in_(units.pc))
-        print("integrated position=", self.get_parent_star().x.in_(units.pc))
+        #print("perturbed stars position=", star.x.in_(units.pc))
+        #print("integrated position=", self.get_parent_star().x.in_(units.pc))
         perturbers -= star
         self.perturbers.add_particles(perturbers[:self.nperturbers])
-        print("Add perturbers:", len(self.perturbers))
+        #print("Add perturbers:", len(self.perturbers))
 
         #print("before x=", self.perturbers.x.in_(units.pc))
         sun = self.particles[self.particles.name=="Sun"][0]
@@ -242,7 +241,7 @@ class PlanetarySystemIntegrationWithPerturbers(object):
         if len(self.perturbers)==0:
             print("No perturbers")
             return
-        print("Remove perturbers:", len(self.perturbers))
+        #print("Remove perturbers:", len(self.perturbers))
         self.gravity_code.particles.remove_particles(self.perturbers)
         self.perturbers.remove_particles(self.perturbers)
         #self.particles.remove_particles(self.perturbers)
@@ -278,7 +277,7 @@ class PlanetarySystemIntegrationWithPerturbers(object):
             #print(lost_planets)
             lp = lost_planets.get_intersecting_subset_in(self.gravity_code.particles)
             #lp = self.gravity_code.particles.get_intersecting_subset_in(lost_planets)
-            print(lp)
+            #print(lp)
             la.add_particles(lp[lp.name=="asteroid"])
             self.gravity_code.particles.remove_particles(lp)
             self.particles.remove_particles(lost_planets)
@@ -307,7 +306,7 @@ class PlanetarySystemIntegrationWithPerturbers(object):
         star = self.particles[self.particles.name=="Sun"][0]
         filename = "lp_planets_key_"+str(star.key)+".amuse"
         #planets = self.particles-star
-        print(f"Write file {filename}") 
+        #print(f"Write file {filename}") 
         write_set_to_file(self.particles,
                           filename,
                           close_file=True,
