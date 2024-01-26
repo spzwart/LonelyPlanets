@@ -49,7 +49,7 @@ def integrate_planetary_system_LonelyPlanets(fperturbers, Nnn, Nasteroids,
     t_diag = dt_diag
     dt = 0.1|units.Myr
     #time_end = cluster_code.get_last_perturber_time()
-    print("End time=", time_end.in_(units.Myr))
+    #print("End time=", time_end.in_(units.Myr))
     while model_time<time_end:
         model_time += dt
 
