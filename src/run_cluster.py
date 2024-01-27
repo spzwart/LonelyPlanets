@@ -199,7 +199,7 @@ def run_LonelyPlanets(bodies,
 
     gravity = bridge.Bridge(verbose=False)
     gravity.add_system(cluster_code, (galaxy_code,))
-    gravity.timestep=0.005|units.Myr
+    gravity.timestep=0.01|units.Myr
 
     model_time = 0 | units.Myr
     for star in suns:

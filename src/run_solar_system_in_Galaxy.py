@@ -24,8 +24,11 @@ import math
 from run_cluster import MilkyWay_galaxy
 
 class PlanetarySystemIntegrationWithPerturbers(object):
-    def __init__(self, nperturbers = -1):
+    def __init__(self,
+                 maximal_timestep=1|units.Myr,
+                 nperturbers = -1):
         self.model_time = 0 | units.yr
+        self.maximal_timestep = maximal_timestep
         self.gravity_code = None
         self.stellar_code = None
         self.particles = Particles(0)
@@ -110,7 +113,12 @@ class PlanetarySystemIntegrationWithPerturbers(object):
     def get_last_perturber_time(self):
         return self.perturber_list[0][0].age
     def get_next_perturber_time(self):
-        return self.perturber_list[self.perturber_list_index-1][0].age
+        if self.perturber_list_index>=1:
+            t_next_perturber = self.perturber_list[self.perturber_list_index-1][0].age
+        else:
+            t_next_perturber = self.model_time + self.maximal_timestep
+        return t_next_perturber
+    
     def get_current_perturber_time(self):
         return self.perturber_list[self.perturber_list_index][0].age
 
@@ -122,7 +130,7 @@ class PlanetarySystemIntegrationWithPerturbers(object):
         #print("Evolve to time=", model_time.in_(units.Myr))
         while self.model_time<model_time:
 
-            print("time=", self.model_time.in_(units.Myr))
+            #print("time=", self.model_time.in_(units.Myr))
 
             if self.model_time<self.get_last_perturber_time():
                 self.add_perturbers()
@@ -138,13 +146,14 @@ class PlanetarySystemIntegrationWithPerturbers(object):
     def evolve_system_for_one_step(self):
         print("evolve from", self.model_time.in_(units.Myr),
               "to ", self.get_next_perturber_time().in_(units.Myr),
-              "index=", self.perturber_list_index)
+              "time index=", self.perturber_list_index)
         #print("pos=", self.model_time.in_(units.Myr), self.particles.x.in_(units.pc))
         if self.stellar_code != None:
             self.stellar_code.evolve_model(self.model_time)
             self.from_stellar.copy()
-        self.to_gravity.copy()        
-        self.gravity_code.evolve_model(self.get_next_perturber_time())
+        self.to_gravity.copy()
+        time_next = self.get_next_perturber_time()
+        self.gravity_code.evolve_model(time_next)
         self.from_gravity.copy()
         if len(self.perturbers)>0:
             self.to_perturbers.copy()
@@ -154,8 +163,8 @@ class PlanetarySystemIntegrationWithPerturbers(object):
         else:
             self.perturber_list_index -= 1
 
-        self.model_time = self.get_current_perturber_time()
-        print("Evolution done, current index=", self.perturber_list_index)
+        self.model_time = time_next #self.get_current_perturber_time()
+        #print("Evolution done, current index=", self.perturber_list_index)
         #print("pos=", self.model_time.in_(units.Myr), self.particles.x.in_(units.pc))
 
     def get_parent_star(self):
@@ -216,25 +225,37 @@ class PlanetarySystemIntegrationWithPerturbers(object):
         #print("perturbed stars position=", star.x.in_(units.pc))
         #print("integrated position=", self.get_parent_star().x.in_(units.pc))
         perturbers -= star
-        self.perturbers.add_particles(perturbers[:self.nperturbers])
-        #print("Add perturbers:", len(self.perturbers))
 
-        #print("before x=", self.perturbers.x.in_(units.pc))
-        sun = self.particles[self.particles.name=="Sun"][0]
-        self.particles.age = sun.age
-        #self.particles.mass = sun.mass
-        self.particles.position -= sun.position
-        self.particles.velocity -= sun.velocity
-        self.particles.position += star.position
-        self.particles.velocity += star.velocity
-        self.to_gravity.copy()
+        dmin = (perturbers.position-star.position).lengths().min()
+        r = (perturbers.position-star.position).lengths()
+        m = perturbers.mass
+        fmax = (m/r**2).max()
+        print("minium distance=", dmin.in_(units.pc), "fmax=", fmax)
 
-        self.gravity_code.particles.add_particles(self.perturbers)
-        self.to_perturbers = self.gravity_code.particles.new_channel_to(self.perturbers)
-        self.from_perturbers = self.perturbers.new_channel_to(self.gravity_code.particles)
+        dlim = 1|units.pc
+        flim = ((1|units.MSun)/dlim**2).max()
+        print("limits in distance:", dmin/dlim, "and force:", fmax/flim)
+        
+        if dmin/dlim<1.0 or fmax/flim>10:
+            self.perturbers.add_particles(perturbers[:self.nperturbers])
+            print("Add perturbers:", len(self.perturbers))
 
-        time_next = self.get_next_perturber_time()
-        print(f"Integrate with perturbers: N={len(self.perturbers)} from time={self.model_time.value_in(units.Myr)} to {(time_next).value_in(units.Myr)}")
+            #print("before x=", self.perturbers.x.in_(units.pc))
+            sun = self.particles[self.particles.name=="Sun"][0]
+            self.particles.age = sun.age
+            #self.particles.mass = sun.mass
+            self.particles.position -= sun.position
+            self.particles.velocity -= sun.velocity
+            self.particles.position += star.position
+            self.particles.velocity += star.velocity
+            self.to_gravity.copy()
+
+            self.gravity_code.particles.add_particles(self.perturbers)
+            self.to_perturbers = self.gravity_code.particles.new_channel_to(self.perturbers)
+            self.from_perturbers = self.perturbers.new_channel_to(self.gravity_code.particles)
+
+            time_next = self.get_next_perturber_time()
+            print(f"Integrate with perturbers: N={len(self.perturbers)} from time={self.model_time.value_in(units.Myr)} to {(time_next).value_in(units.Myr)}")
 
     def remove_perturbers(self):
         #print("After x=", self.perturbers.x.in_(units.pc))
@@ -245,6 +266,7 @@ class PlanetarySystemIntegrationWithPerturbers(object):
         self.gravity_code.particles.remove_particles(self.perturbers)
         self.perturbers.remove_particles(self.perturbers)
         #self.particles.remove_particles(self.perturbers)
+        self.particles.move_to_center()
 
     def remove_lost_planets(self):
 
