@@ -60,8 +60,8 @@ def integrate_planetary_system_LonelyPlanets(fperturbers, Nnn, Nasteroids,
         sys.stdout.flush()
 
         if cluster_code.terminating_criterium_reached():
+            time_end = t_diag
             print("Stop the run.")
-            break
         
     gravity.stop()
 
