@@ -189,6 +189,16 @@ class PlanetarySystemIntegrationWithPerturbers(object):
     @property 
     def kinetic_energy(self):
         return self.gravity_code.kinetic_energy()
+    def terminating_criterium_reached(self):
+        planets = self.particles[self.particles.type=="planet"]
+        asteroids = self.particles[self.particles.type=="asteroid"]
+        stop_run = False
+        if len(planets)<=2:
+            stop_run = True
+        if len(asteroids)<=10:
+            stop_run = True
+        return stop_run
+    
     def stop(self):
         if self.stellar_code != None:
             self.stellar_code.stop()
