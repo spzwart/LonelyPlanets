@@ -141,7 +141,7 @@ class PlanetarySystemIntegrationWithPerturbers(object):
 
             self.remove_perturbers()
             
-            ##cluster_code.remove_lost_planets()
+            self.remove_lost_planets()
 
     def evolve_system_for_one_step(self):
         print("evolve from", self.model_time.in_(units.Myr),
@@ -269,6 +269,7 @@ class PlanetarySystemIntegrationWithPerturbers(object):
         self.particles.move_to_center()
 
     def remove_lost_planets(self):
+        print("Remove lost planets")
 
         sun = self.particles[self.particles.name=="Sun"][0]
         panda = self.particles-sun
@@ -279,6 +280,7 @@ class PlanetarySystemIntegrationWithPerturbers(object):
 
         lost_planets = panda[panda.eccentricity>1]
         la = Particles()
+        print("Lost planets=", len(lost_planets))
         if len(lost_planets)>0:
             p = lost_planets[lost_planets.type=="planet"]
             a = lost_planets[lost_planets.type=="asteroid"]
@@ -291,6 +293,7 @@ class PlanetarySystemIntegrationWithPerturbers(object):
             self.particles.remove_particles(lost_planets)
 
         lost_planets = panda[np.isnan(panda.eccentricity)]
+        print("Lost asteroids=", len(lost_planets))
         if len(lost_planets)>0:
             p = lost_planets[lost_planets.type=="planet"]
             a = lost_planets[lost_planets.type=="asteroid"]
@@ -310,6 +313,7 @@ class PlanetarySystemIntegrationWithPerturbers(object):
             if pi.semimajor_axis*(1-pi.eccentricity)<100|units.RSun:
                 merged_planets.add_particle(pi)
 
+        print("Merged objects=", len(lost_planets))
         if len(merged_planets)>0:
             p = merged_planets[merged_planets.type=="planet"]
             a = merged_planets[merged_planets.type=="asteroid"]
@@ -320,7 +324,6 @@ class PlanetarySystemIntegrationWithPerturbers(object):
             self.particles.remove_particles(merged_planets)
 
         print(f"Time={self.model_time.in_(units.Myr)}: a={planets.semimajor_axis.in_(units.au)}, e={planets.eccentricity}")
-
 
             
     def write_planetary_system(self):
