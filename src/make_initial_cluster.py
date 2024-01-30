@@ -7,7 +7,7 @@ from amuse.units import nbody_system
 from amuse.ic.kingmodel import new_king_model
 from amuse.community.fractalcluster.interface import new_fractal_cluster_model
 
-from amuse.community.symple.interface import symple	# symplectic
+#from amuse.community.symple.interface import symple	# symplectic
 from amuse.community.huayno.interface import Huayno	# symplectic
 
 from amuse.ext.orbital_elements import get_orbital_elements_from_arrays
