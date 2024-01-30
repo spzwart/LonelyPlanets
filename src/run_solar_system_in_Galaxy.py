@@ -22,6 +22,7 @@ import numpy as np
 import math
 
 from run_cluster import MilkyWay_galaxy
+from make_initial_cluster import ZAMS_radius
 
 class PlanetarySystemIntegrationWithPerturbers(object):
     def __init__(self,
@@ -31,11 +32,13 @@ class PlanetarySystemIntegrationWithPerturbers(object):
         self.maximal_timestep = maximal_timestep
         self.gravity_code = None
         self.stellar_code = None
+        self.collision_detection = None
         self.particles = Particles(0)
         self.nperturbers = nperturbers
         self.perturbers = Particles(0)
         self.perturber_list = None
         self.perturber_list_index = 0
+        #self.collision_pairs = []
 
         self.converter=nbody_system.nbody_to_si(1|units.MSun,
                                                 1000|units.au)
@@ -104,11 +107,17 @@ class PlanetarySystemIntegrationWithPerturbers(object):
         self.gravity_code = Huayno(convert_nbody=self.converter,
                                    mode="openmp",
                                    redirection="none")
+        self.gravity_code.parameters.inttype_parameter = 29 #SHARED2_COLLISIONS)
         self.gravity_code.particles.add_particles(self.particles)
         self.gravity_code.parameters.timestep_parameter = 0.03
+        print(self.gravity_code.parameters)
 
         self.from_gravity = self.gravity_code.particles.new_channel_to(self.particles)
         self.to_gravity = self.particles.new_channel_to(self.gravity_code.particles)
+
+        self.collision_detection = self.gravity_code.stopping_conditions.collision_detection
+        self.collision_detection.enable()
+
 
     def get_last_perturber_time(self):
         return self.perturber_list[0][0].age
@@ -151,10 +160,22 @@ class PlanetarySystemIntegrationWithPerturbers(object):
         if self.stellar_code != None:
             self.stellar_code.evolve_model(self.model_time)
             self.from_stellar.copy()
+
+        # To test the collosion handling
+        #blow up stellar radius to test collisions
+        #sun = self.particles[self.particles.name=="Sun"]
+        #sun.radius = 4|units.au
+        #self.particles.radius = 1|units.au
+        
         self.to_gravity.copy()
+        #print("R=", self.gravity_code.particles.radius.in_(units.au))
         time_next = self.get_next_perturber_time()
-        self.gravity_code.evolve_model(time_next)
-        self.from_gravity.copy()
+        while self.gravity_code.model_time<time_next-(1|units.yr):
+            print("time=", self.gravity_code.model_time.in_(units.Myr)-time_next.in_(units.Myr), self.gravity_code.model_time.in_(units.Myr)-self.model_time.in_(units.Myr))
+            self.gravity_code.evolve_model(time_next)
+            self.flag_colliding_stars()
+            self.from_gravity.copy()
+        
         if len(self.perturbers)>0:
             self.to_perturbers.copy()
         if self.perturber_list_index==0:
@@ -279,7 +300,6 @@ class PlanetarySystemIntegrationWithPerturbers(object):
         self.particles.move_to_center()
 
     def remove_lost_planets(self):
-        print("Remove lost planets")
 
         sun = self.particles[self.particles.name=="Sun"][0]
         panda = self.particles-sun
@@ -290,7 +310,6 @@ class PlanetarySystemIntegrationWithPerturbers(object):
 
         lost_planets = panda[panda.eccentricity>1]
         la = Particles()
-        print("Lost planets=", len(lost_planets))
         if len(lost_planets)>0:
             p = lost_planets[lost_planets.type=="planet"]
             a = lost_planets[lost_planets.type=="asteroid"]
@@ -303,37 +322,21 @@ class PlanetarySystemIntegrationWithPerturbers(object):
             self.particles.remove_particles(lost_planets)
 
         lost_planets = panda[np.isnan(panda.eccentricity)]
-        print("Lost asteroids=", len(lost_planets))
         if len(lost_planets)>0:
             p = lost_planets[lost_planets.type=="planet"]
             a = lost_planets[lost_planets.type=="asteroid"]
             print(f"At time={self.model_time.in_(units.Myr)}: remove ({len(p)}, {len(a)}) nan (planets, asteroids)")
         
-            #print(lost_planets)
             lp = lost_planets.get_intersecting_subset_in(self.gravity_code.particles)
-            #lp = self.gravity_code.particles.get_intersecting_subset_in(lost_planets)
-            #print(lp)
             la.add_particles(lp[lp.name=="asteroid"])
             self.gravity_code.particles.remove_particles(lp)
             self.particles.remove_particles(lost_planets)
 
-        merged_planets = Particles()
-        for pi in panda:
-            #print("pi=", pi.eccentricity)
-            if pi.semimajor_axis*(1-pi.eccentricity)<100|units.RSun:
-                merged_planets.add_particle(pi)
-
-        print("Merged objects=", len(lost_planets))
-        if len(merged_planets)>0:
-            p = merged_planets[merged_planets.type=="planet"]
-            a = merged_planets[merged_planets.type=="asteroid"]
-            print(f"At time={self.model_time.in_(units.Myr)}: remove ({len(p)}, {len(a)}) merged (planets, asteroids)")
-        
-            mp = merged_planets.get_intersecting_subset_in(self.gravity_code.particles)
-            self.gravity_code.particles.remove_particles(mp)
-            self.particles.remove_particles(merged_planets)
-
-        print(f"Time={self.model_time.in_(units.Myr)}: a={planets.semimajor_axis.in_(units.au)}, e={planets.eccentricity}")
+        pericentra = panda.semimajor_axis*(1-panda.eccentricity)
+        pericentra = pericentra[pericentra<1|units.au]
+        pericentra = np.sort(pericentra)
+            
+        print(f"Time={self.model_time.in_(units.Myr)} Planet orbits: a={planets.semimajor_axis.in_(units.au)}, e={planets.eccentricity}")
 
             
     def write_planetary_system(self):
@@ -348,7 +351,71 @@ class PlanetarySystemIntegrationWithPerturbers(object):
                           append_to_file=True)
         print("File written:", filename, "N_planets=", len(self.particles))
 
-            
+    def merge_two_particles(self, particles_in_encounter):
+        mass = particles_in_encounter.total_mass()
+        com_pos = particles_in_encounter.center_of_mass()
+        com_vel = particles_in_encounter.center_of_mass_velocity()
+        if particles_in_encounter[0].mass>particles_in_encounter[1].mass:
+            target = particles_in_encounter[0]
+            projectile = particles_in_encounter[1]
+        else:
+            target = particles_in_encounter[1]
+            projectile = particles_in_encounter[0]
+        print(f"Merge {target.name} with {projectile.name} with masses={particles_in_encounter.mass.in_(units.MJupiter)}")
+        
+        target.mass = mass
+        target.position = com_pos
+        target.velocity = com_vel
+
+        if "star" in target.type:
+            target.radius = ZAMS_radius(target.mass)
+            print(f"Collision with {target.name}.")
+        elif "planet" in target.type:
+            rho = (1|units.MJupiter)/(1|units.RJupiter)**3 
+            target.radius = (target.mass/rho)**(1./3.)
+            print("Collision with {target.name}.")
+        else:
+            print("Collision between two asteroids.")
+        #self.particles.add_particles(new_particle)
+        #self.particles.remove_particles(projectile.as_set())
+        return projectile.as_set()
+
+    def flag_colliding_stars(self):
+        if self.collision_detection.is_set():
+            E_coll = self.gravity_code.kinetic_energy + \
+                self.gravity_code.potential_energy
+            print("At time=", self.gravity_code.model_time.in_(units.Myr),
+                  "number of encounters=",
+                  len(self.collision_detection.particles(0)))
+            Nenc = 0
+            for ci in range(len(self.collision_detection.particles(0))):
+                print("Collision between: ",
+                      self.collision_detection.particles(0)[ci].key,
+                      "and",
+                      self.collision_detection.particles(1)[ci].key)
+                particles_in_encounter \
+                    = Particles(particles=[self.collision_detection.particles(0)[ci],
+                                           self.collision_detection.particles(1)[ci]])
+                particles_in_encounter \
+                    = particles_in_encounter.get_intersecting_subset_in(self.particles)
+
+                #collision_pairs.add_particles(particles_in_encounter)
+
+                projectile = self.merge_two_particles(particles_in_encounter)
+                # you cannot use synchronize_to here, because
+                # the local particle set does not contain the perturbers
+                # They would be removed from the gravity code
+                #self.particles.synchronize_to(self.gravity_code.particles)
+                self.particles.remove_particles(projectile)
+                self.gravity_code.particles.remove_particles(projectile)
+                self.to_gravity.copy()
+
+                Nenc += 1
+                print("Resolve encounter Number:", Nenc)
+            dE_coll = E_coll - (self.gravity_code.kinetic_energy + self.gravity_code.potential_energy)
+            print("dE_coll =", dE_coll, "N_enc=", Nenc)
+        sys.stdout.flush()
+        
 def semi_to_orbital_period(a, Mtot) :
     return 2*math.pi * (a**3/(constants.G*Mtot)).sqrt()
 
