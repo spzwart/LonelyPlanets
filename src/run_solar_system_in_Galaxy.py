@@ -46,8 +46,8 @@ class PlanetarySystemIntegrationWithPerturbers(object):
 
 
         self.maximal_timestep = maximal_timestep
-        self.minimal_number_of_planets = 1
-        self.minimal_number_of_asteroids = 1
+        self.minimal_number_of_planets = 2
+        self.minimal_number_of_asteroids = 10
 
 
         self.constants = ConstantParameters()
