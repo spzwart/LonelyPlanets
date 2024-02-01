@@ -371,7 +371,7 @@ class PlanetarySystemIntegrationWithPerturbers(object):
         escapers = Particles()
         sun = self.particles[self.particles.name=="Sun"][0]
         panda = self.particles-sun
-        asteroids = panda[panda.name=="asteroid"]
+        asteroids = panda[panda.type=="asteroid"]
         planets = panda - asteroids
         get_orbital_elements_of_planetary_system(sun, planets)
         get_orbital_elements_of_planetary_system(sun, asteroids)
@@ -386,9 +386,9 @@ class PlanetarySystemIntegrationWithPerturbers(object):
             print(f"At time={self.model_time.in_(units.Myr)}: remove ({len(p)}, {len(a)}) unbound (planets, asteroids)")
             
             #print(lost_planets)
-            lp = lost_planets.get_intersecting_subset_in(self.gravity_code.particles)
-            la.add_particles(lp[lp.name=="asteroid"])
-            self.gravity_code.particles.remove_particles(lp)
+            #lp = lost_planets.get_intersecting_subset_in(self.gravity_code.particles)
+            #la.add_particles(lp[lp.type=="asteroid"])
+            self.gravity_code.particles.remove_particles(lost_planets)
             self.particles.remove_particles(lost_planets)
 
         lost_planets = panda[np.isnan(panda.eccentricity)]
@@ -399,9 +399,9 @@ class PlanetarySystemIntegrationWithPerturbers(object):
             a = lost_planets[lost_planets.type=="asteroid"]
             print(f"At time={self.model_time.in_(units.Myr)}: remove ({len(p)}, {len(a)}) nan (planets, asteroids)")
         
-            lp = lost_planets.get_intersecting_subset_in(self.gravity_code.particles)
-            la.add_particles(lp[lp.name=="asteroid"])
-            self.gravity_code.particles.remove_particles(lp)
+            #lp = lost_planets.get_intersecting_subset_in(self.gravity_code.particles)
+            #la.add_particles(lp[lp.type=="asteroid"])
+            self.gravity_code.particles.remove_particles(lost_planets)
             self.particles.remove_particles(lost_planets)
 
 
