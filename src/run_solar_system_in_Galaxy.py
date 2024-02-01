@@ -540,10 +540,10 @@ def get_orbital_elements_of_planetary_system(star, planets):
     planets.semimajor_axis = sma
     planets.eccentricity = ecc
     planets = planets[planets.eccentricity>=1]
-    planets.eccentricity = 1
+    planets.eccentricity = 10
     planets.semimajor_axis = 1.e+10 | units.au
     planets = planets[np.isnan(planets.eccentricity)]
-    planets.eccentricity = 1
+    planets.eccentricity = 10
     planets.semimajor_axis = 1.e+10 | units.au
 
 
