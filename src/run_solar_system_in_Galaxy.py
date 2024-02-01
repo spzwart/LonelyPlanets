@@ -368,6 +368,7 @@ class PlanetarySystemIntegrationWithPerturbers(object):
 
     def remove_lost_planets(self):
 
+        escapers = Particles()
         sun = self.particles[self.particles.name=="Sun"][0]
         panda = self.particles-sun
         asteroids = panda[panda.name=="asteroid"]
@@ -378,6 +379,8 @@ class PlanetarySystemIntegrationWithPerturbers(object):
         lost_planets = panda[panda.eccentricity>1]
         la = Particles()
         if len(lost_planets)>0:
+            lost_planets.name = "escaper"
+            escapers.add_particles(lost_planets)
             p = lost_planets[lost_planets.type=="planet"]
             a = lost_planets[lost_planets.type=="asteroid"]
             print(f"At time={self.model_time.in_(units.Myr)}: remove ({len(p)}, {len(a)}) unbound (planets, asteroids)")
@@ -390,6 +393,8 @@ class PlanetarySystemIntegrationWithPerturbers(object):
 
         lost_planets = panda[np.isnan(panda.eccentricity)]
         if len(lost_planets)>0:
+            lost_planets.name = "unknown"
+            escapers.add_particles(lost_planets)
             p = lost_planets[lost_planets.type=="planet"]
             a = lost_planets[lost_planets.type=="asteroid"]
             print(f"At time={self.model_time.in_(units.Myr)}: remove ({len(p)}, {len(a)}) nan (planets, asteroids)")
@@ -416,6 +421,8 @@ class PlanetarySystemIntegrationWithPerturbers(object):
 
         # near pericenter
         if len(colliding_particles)>0:
+            colliding_particles.name = "collision"
+            escapers.add_particles(colliding_particles)
             p = colliding_particles[colliding_particles.type=="planet"]
             a = colliding_particles[colliding_particles.type=="asteroid"]
             print(f"At time={self.model_time.in_(units.Myr)}:",
@@ -424,10 +431,22 @@ class PlanetarySystemIntegrationWithPerturbers(object):
             self.gravity_code.particles.remove_particles(lp)
             self.particles.remove_particles(colliding_particles)
 
+        if len(escapers)>0:
+            print(f"Number of particles lost N=: len(escapers)")
+            self.write_escaping_particles(escapers)
 
         print(f"Time={self.model_time.in_(units.Myr)} Planet orbits: a={planets.semimajor_axis.in_(units.au)}, e={planets.eccentricity}")
 
-            
+
+        
+    def write_escaping_particles(self, escapers):
+        star = self.particles[self.particles.name=="Sun"][0]
+        filename = "lp_escapers_key_"+str(star.key)+".amuse"
+        write_set_to_file(escapers,
+                          filename,
+                          close_file=True,
+                          append_to_file=True)
+        
     def write_planetary_system(self):
         self.particles.age = self.model_time
         star = self.particles[self.particles.name=="Sun"][0]
