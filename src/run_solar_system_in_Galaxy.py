@@ -350,7 +350,6 @@ class PlanetarySystemIntegrationWithPerturbers(object):
             self.perturbers.add_particles(perturbers[:self.nperturbers])
             print("Add perturbers:", len(self.perturbers))
             print("self.perturbers.position.in_(units.pc)")
-            self.perturbers.mass *= 0
 
             #print("before x=", self.perturbers.x.in_(units.pc))
             self.particles.age = sun.age
