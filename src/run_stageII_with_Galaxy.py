@@ -37,7 +37,7 @@ def integrate_planetary_system_LonelyPlanets(fperturbers, Nnn, Nasteroids,
                                              time_end, integrator):
 
     wct_initialization = wallclock.time()    
-    dt_diag = 0.1 | units.Myr
+    dt_diag = 1.0 | units.Myr
     cluster_code = PlanetarySystemIntegrationWithPerturbers(nperturbers=Nnn,
                                                             maximal_timestep=dt_diag)
     cluster_code.read_perturber_list(fperturbers)
