@@ -44,6 +44,7 @@ class PlanetarySystemIntegrationWithPerturbers(object):
         self.perturber_list_index = 0
         #self.collision_pairs = []
 
+        self.key = None # host stellar key
 
         self.maximal_timestep = maximal_timestep
         self.minimal_number_of_planets = 2
@@ -302,6 +303,7 @@ class PlanetarySystemIntegrationWithPerturbers(object):
             print(f"Number of perturbers adopted: N={self.nperturbers}")
 
             star = pstars[pstars.name=="Sun"][0].copy()
+            self.key = star.key
             self.particles.add_particle(star)
         
             #print("N==", len(pstars), dt_perturbation.in_(units.Myr))
@@ -517,9 +519,12 @@ class PlanetarySystemIntegrationWithPerturbers(object):
 
         
     def write_escaping_particles(self, escapers):
-        star = self.particles[self.particles.name=="Sun"][0]
         escapers.age = self.model_time
-        filename = "lp_escapers_key_"+str(star.key)+".amuse"
+        key = self.key
+        if self.key==None:
+            star = self.particles[self.particles.name=="Sun"][0]
+            key = star.key
+        filename = "lp_escapers_key_"+str(key)+".amuse"
         write_set_to_file(escapers,
                           filename,
                           close_file=True,
@@ -527,8 +532,11 @@ class PlanetarySystemIntegrationWithPerturbers(object):
         
     def write_planetary_system(self):
         self.particles.age = self.model_time
-        star = self.particles[self.particles.name=="Sun"][0]
-        filename = "lp_planets_key_"+str(star.key)+".amuse"
+        key = self.key
+        if self.key==None:
+            star = self.particles[self.particles.name=="Sun"][0]
+            key = star.key
+        filename = "lp_planets_key_"+str(key)+".amuse"
         #planets = self.particles-star
         #print(f"Write file {filename}") 
         write_set_to_file(self.particles,
