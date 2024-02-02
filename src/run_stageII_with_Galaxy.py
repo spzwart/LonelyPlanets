@@ -37,7 +37,7 @@ def integrate_planetary_system_LonelyPlanets(fperturbers, Nnn, Nasteroids,
                                              time_end, integrator):
 
     wct_initialization = wallclock.time()    
-    dt_diag = 1.0 | units.Myr
+    dt_diag = 0.1 | units.Myr
     cluster_code = PlanetarySystemIntegrationWithPerturbers(nperturbers=Nnn,
                                                             maximal_timestep=dt_diag)
     cluster_code.read_perturber_list(fperturbers)
@@ -50,11 +50,14 @@ def integrate_planetary_system_LonelyPlanets(fperturbers, Nnn, Nasteroids,
 
     cluster_code.determine_orbital_parameters()
 
+    #galaxy_code = MilkyWay_galaxy(Mb=0*1.40592e10| units.MSun,
+    #                              Md=0*8.5608e10| units.MSun,
+    #                              Mh=0*1.07068e11 | units.MSun)
     galaxy_code = MilkyWay_galaxy()
     
     gravity = bridge.Bridge(verbose=False, use_threading=False)
     gravity.add_system(cluster_code, (galaxy_code,))
-    gravity.timestep=dt_diag
+    gravity.timestep=0.5*dt_diag
 
     cluster_code.wct_initialization = (wallclock.time()-wct_initialization) | units.s    
     model_time = 0|units.Myr
