@@ -719,8 +719,6 @@ def generate_planetary_system(parent_star, Nasteroids):
     planets = planetary_system[4:]
     planets = planets[:-1]
 
-    planets.mass = 0 | units.MEarth
-    
     planets.type = "planet"
     planets.position += parent_star.position
     planets.velocity += parent_star.velocity
