@@ -441,6 +441,7 @@ class PlanetarySystemIntegrationWithPerturbers(object):
         
     def write_escaping_particles(self, escapers):
         star = self.particles[self.particles.name=="Sun"][0]
+        escapers.age = self.model_time
         filename = "lp_escapers_key_"+str(star.key)+".amuse"
         write_set_to_file(escapers,
                           filename,
