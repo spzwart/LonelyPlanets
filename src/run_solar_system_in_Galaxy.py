@@ -72,7 +72,6 @@ class PlanetarySystemIntegrationWithPerturbers(object):
         
     def get_perturbed_particle(self):
         perturbed_particle = self.particles[self.particles.name=="Sun"]
-        #perturbed_particle = self.particles[self.particles.type=="star"]
         if len(perturbed_particle)==1:
             return perturbed_particle
         else:
@@ -104,7 +103,7 @@ class PlanetarySystemIntegrationWithPerturbers(object):
             sun = self.initialize_sun_at_galactic_position(Rinit)
             parent_star.add_particle(sun)
             self.particles.add_particles(parent_star)
-            
+
         planetary_system = new_solar_system()
         sun = planetary_system[planetary_system.name=="SUN"][0]
         #parent_star.mass = sun.mass
@@ -132,6 +131,8 @@ class PlanetarySystemIntegrationWithPerturbers(object):
     
         self.particles.add_particles(planets)
         self.particles.add_particles(asteroids)
+
+        self.key = self.get_perturbed_particle().key
 
     def determine_orbital_parameters(self):
         #parent_star = self.particles[self.particles.type=="star"]
@@ -303,7 +304,7 @@ class PlanetarySystemIntegrationWithPerturbers(object):
             print(f"Number of perturbers adopted: N={self.nperturbers}")
 
             star = pstars[pstars.name=="Sun"][0].copy()
-            self.key = star.key
+            self.set_stellar_identity(star.key)
             self.particles.add_particle(star)
         
             #print("N==", len(pstars), dt_perturbation.in_(units.Myr))
@@ -515,14 +516,23 @@ class PlanetarySystemIntegrationWithPerturbers(object):
 
         #print(f"Time={self.model_time.in_(units.Myr)} Asteroid orbits: a={np.sort(asteroids.semimajor_axis.value_in(units.au))}, e={np.sort(asteroids.eccentricity)}")
 
-
+    def set_stellar_identity(self, key=None):
+        self.key = key
+        
+    def get_stellar_identity(self):
+        key = self.key
+        if key==None:
+            try:
+                star = self.get_perturbed_particle()
+                key = star.key
+            except:
+                print("No key found in perturbed particles.")
+                key = "NoKey"
+        return key
         
     def write_escaping_particles(self, escapers):
         escapers.age = self.model_time
-        key = self.key
-        if self.key==None:
-            star = self.particles[self.particles.name=="Sun"][0]
-            key = star.key
+        key = self.get_stellar_identity()
         filename = "lp_escapers_key_"+str(key)+".amuse"
         write_set_to_file(escapers,
                           filename,
@@ -531,10 +541,7 @@ class PlanetarySystemIntegrationWithPerturbers(object):
         
     def write_planetary_system(self):
         self.particles.age = self.model_time
-        key = self.key
-        if self.key==None:
-            star = self.particles[self.particles.name=="Sun"][0]
-            key = star.key
+        key = self.get_stellar_identity()
         filename = "lp_planets_key_"+str(key)+".amuse"
         #planets = self.particles-star
         #print(f"Write file {filename}") 
