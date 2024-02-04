@@ -12,6 +12,8 @@ CONSTANT = 0, SHARED2 = 1, PASS_KDK = 2, HOLD_KDK = 3, BRIDGE_KDK = 4,
       CONSTANT8 = 37, CONSTANT10 = 38, ERROR_CONTROL=39, CC_SHARED10=40, CCC_SHARED10=41
 """
 import sys
+import os
+import os.path
 import time as wallclock
 from amuse.lab import *
 from amuse.couple import bridge
@@ -76,9 +78,15 @@ def integrate_planetary_system_LonelyPlanets(fperturbers, Nnn, Nasteroids,
         sys.stdout.flush()
 
         if cluster_code.terminating_criterium_reached():
+            print("Stop the run due to lost planets/asteroids.")
             time_end = t_diag
-            print("Stop the run.")
-        
+
+
+        if os.path.isfile("STOP"):
+            print("Stop the run by manual intervention.")
+            os.remove("STOP") 
+            time_end = t_diag
+
     gravity.stop()
     cluster_code.print_wallclock_time()
 
