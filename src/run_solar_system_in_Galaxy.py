@@ -160,7 +160,6 @@ class PlanetarySystemIntegrationWithPerturbers(object):
             self.stellar_code = None
     def start_gravity_code(self, integrator=0):
         self.gravity_code = Huayno(convert_nbody=self.converter,
-                                   mode="openmp",
                                    redirection="none")
         self.gravity_code.parameters.inttype_parameter = integrator
         self.gravity_code.particles.add_particles(self.particles)
