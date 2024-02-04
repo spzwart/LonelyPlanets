@@ -25,7 +25,7 @@ from amuse.community.huayno.interface import Huayno	# symplectic
 from amuse.ic import make_planets_oligarch
 from amuse.ext import solarsystem 
 
-from matplotlib import pyplot as plt
+#from matplotlib import pyplot as plt
 import numpy as np
 import math
 
