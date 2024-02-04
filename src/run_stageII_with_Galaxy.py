@@ -90,13 +90,16 @@ def new_option_parser():
     result.add_option("--Nast", dest="Nasteroids",
                       type="int",default = 1000,
                       help="number of asteroids [%default]")
+    result.add_option("--seed", dest="seed",
+                      type="int",default = 12345,
+                      help="random number seed [%default]")
     result.add_option("-I", dest="integrator",
                       type="int", default = 8,
                       help="integrator id (Huayno) [%default]")
     result.add_option("-f", 
                       dest="fperturbers",
-                      default = "",
                       #default = "lps_key_13544424148568912489.amuse",
+                      default = "",
                       help="stellar input filename [%default]")
     result.add_option("-t", 
                       dest="time_end",
@@ -109,7 +112,7 @@ def new_option_parser():
 if __name__ in ('__main__', '__plot__'):
     o, arguments  = new_option_parser().parse_args()
 
-    np.random.seed(31415)
+    np.random.seed(o.seed)
     integrate_planetary_system_LonelyPlanets(o.fperturbers,
                                              o.Nnn,
                                              o.Nasteroids,
