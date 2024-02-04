@@ -73,7 +73,7 @@ class PlanetarySystemIntegrationWithPerturbers(object):
     def get_perturbed_particle(self):
         perturbed_particle = self.particles[self.particles.name=="Sun"]
         if len(perturbed_particle)==1:
-            return perturbed_particle
+            return perturbed_particle[0]
         else:
             print("No or too many perturbed particle(s)")
             print("Stop")
