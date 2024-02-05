@@ -125,7 +125,8 @@ def new_option_parser():
 if __name__ in ('__main__', '__plot__'):
     o, arguments  = new_option_parser().parse_args()
 
-    np.random.seed(o.seed)
+    if o.seed>0:
+        np.random.seed(o.seed)
     integrate_planetary_system_LonelyPlanets(o.fperturbers,
                                              o.Nnn,
                                              o.Nasteroids,
