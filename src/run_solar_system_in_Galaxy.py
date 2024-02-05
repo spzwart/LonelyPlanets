@@ -405,8 +405,6 @@ class PlanetarySystemIntegrationWithPerturbers(object):
             self.perturbers.add_particles(perturbers[:self.nperturbers])
             print("Add perturbers:", len(self.perturbers))
             print("self.perturbers.position.in_(units.pc)")
-            self.perturbers.mass *= 0
-
 
             self.gravity_code.particles.add_particles(self.perturbers)
             self.to_perturbers = self.gravity_code.particles.new_channel_to(self.perturbers)
