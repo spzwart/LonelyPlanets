@@ -83,9 +83,14 @@ def integrate_planetary_system_LonelyPlanets(fperturbers, Nnn, Nasteroids,
 
 
         if os.path.isfile("STOP"):
-            print("Stop the run by manual intervention.")
-            os.remove("STOP") 
-            time_end = t_diag
+            file = open("STOP", "r")
+            keys = file.readlines()
+            file.close() 
+            for key in keys:
+                if str(key) in str(cluster_code.key):
+                    print("Stop the run by manual intervention.")
+                    time_end = t_diag
+            #os.remove("STOP") 
 
     gravity.stop()
     cluster_code.print_wallclock_time()
