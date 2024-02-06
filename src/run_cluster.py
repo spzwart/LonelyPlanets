@@ -266,7 +266,8 @@ if __name__ in ('__main__', '__plot__'):
         if len(suns)<o.NSuns:
             print("Too many suns requested in input snapshot.")
             exit(-1)
-        suns = suns.random_sample(o.NSuns)
+        if o.NSuns>0:
+            suns = suns.random_sample(o.NSuns)
 
     print(np.mean(suns.mass.in_(units.MSun)).in_(units.MSun))
     suns.mass = 1|units.MSun

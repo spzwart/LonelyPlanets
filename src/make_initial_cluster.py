@@ -5,6 +5,7 @@ from amuse.lab import *
 from amuse.couple import bridge
 from amuse.units import nbody_system
 from amuse.ic.kingmodel import new_king_model
+from amuse.ic.plummer import new_plummer_model
 from amuse.community.fractalcluster.interface import new_fractal_cluster_model
 
 #from amuse.community.symple.interface import symple	# symplectic
@@ -29,14 +30,18 @@ def ZAMS_radius(mass):
     r_zams = pow(mass.value_in(units.MSun), 1.25) * (0.1148 + 0.8604*mass_sq) / (0.04651 + mass_sq)
     return r_zams | units.RSun
 
-def generate_initial_star_cluster(N=10, Rvir = 1|units.pc, W0=7.0):
+def generate_initial_star_cluster(N=10, Rvir = 1|units.pc, W0=-1):
 
     Mmin = 0.08|units.MSun
     Mmax = 30|units.MSun
     mass = new_kroupa_mass_distribution(N, mass_min=Mmin, mass_max=Mmax)
     converter=nbody_system.nbody_to_si(mass.sum(), Rvir)
-    
-    bodies = new_king_model(N, W0, convert_nbody=converter)
+
+
+    if W0>=1:
+        bodies = new_king_model(N, W0, convert_nbody=converter)
+    else:
+        bodies = new_plummer_model(N, converter)
     bodies.name = "star"
     bodies.type = "star"
     bodies.mass = mass
@@ -51,7 +56,7 @@ def new_option_parser():
     result = OptionParser()
     result.add_option("-N", dest="N", type="int",default = 100,
                       help="number of stars [%default]")
-    result.add_option("-W", dest="Wo", type="float",default = 5,
+    result.add_option("-W", dest="Wo", type="float",default = -1,
                       help="King model profile W0[%default]")
     result.add_option("-R", dest="Rvir", unit=units.pc,
                       type="float",default = 1|units.pc,
