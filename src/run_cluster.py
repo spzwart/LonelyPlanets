@@ -178,8 +178,10 @@ def run_LonelyPlanets(bodies,
     stellar.evolve_model(0|units.Myr)
     channel_from_se.copy()
     index = 0
-    fcluster = "cluster_i{0:04}.amuse".format(index)
-    write_set_to_file(bodies, fcluster)
+    fcluster = "cluster_i{0:06}.amuse".format(index)
+    write_set_to_file(bodies, fcluster,
+                      close_file=True,
+                      append_to_file=True)
     
     converter=nbody_system.nbody_to_si(bodies.mass.sum(), time_end)
     
@@ -226,9 +228,10 @@ def run_LonelyPlanets(bodies,
         if model_time>t_diag:
             t_diag += dt_diag
             index += 1
-            fcluster = "cluster_i{0:04}.amuse".format(index)
-            write_set_to_file(bodies, fcluster)
-        
+            fcluster = "cluster_i{0:06}.amuse".format(index)
+            write_set_to_file(bodies, fcluster,
+                              close_file=True,
+                              append_to_file=True)
     gravity.stop()
 
 def new_option_parser():

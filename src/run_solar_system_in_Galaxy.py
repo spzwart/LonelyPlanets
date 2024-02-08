@@ -113,8 +113,6 @@ class PlanetarySystemIntegrationWithPerturbers(object):
         planets = planetary_system[4:]
         planets = planets[:-1]
         planets.type = "planet"
-        planets.position += parent_star.position
-        planets.velocity += parent_star.velocity
 
         if self.minimal_number_of_planets<=len(planets):
             self.minimal_number_of_planets = len(planets)-self.minimal_number_of_planets
@@ -126,6 +124,19 @@ class PlanetarySystemIntegrationWithPerturbers(object):
         asteroids.mass = 0 | units.MEarth
         asteroids.name = "asteroid"
         asteroids.type = "asteroid"
+
+        # rotate planetary system
+        from rotate import rotate_particle_set
+        phi = 0 #| units.deg rotate over x
+        theta = -60.2 #| units.deg  rotate over y
+        chi = 0 #| units.deg rotate around z
+        rotate_particle_set(planets, phi, theta, chi)
+        rotate_particle_set(asteroids, phi, theta, chi)
+        print("rotate planetary system along the y-axis")
+        
+        # translate planetary system
+        planets.position += parent_star.position
+        planets.velocity += parent_star.velocity
         asteroids.position += parent_star.position
         asteroids.velocity += parent_star.velocity
     
@@ -723,8 +734,6 @@ def generate_planetary_system(parent_star, Nasteroids):
     planets = planets[:-1]
 
     planets.type = "planet"
-    planets.position += parent_star.position
-    planets.velocity += parent_star.velocity
 
     converter=nbody_system.nbody_to_si(parent_star.mass.sum(), 1|units.au)
     asteroids = ProtoPlanetaryDisk(Nasteroids,
@@ -734,6 +743,19 @@ def generate_planetary_system(parent_star, Nasteroids):
     asteroids.mass = 0 | units.MEarth
     asteroids.name = "asteroid"
     asteroids.type = "asteroid"
+
+    # rotate planetary system
+    from rotate import rotate_particle_set
+    phi = 90 | units.deg
+    #theta = 60.2 | units.deg
+    theta = 0 | units.deg
+    chi = 0 | units.deg
+    rotate_particle_set(planets, phi, theta, chi)
+    rotate_particle_set(asteroids, phi, theta, chi)
+
+    #translate planetary system
+    planets.position += parent_star.position
+    planets.velocity += parent_star.velocity
     asteroids.position += parent_star.position
     asteroids.velocity += parent_star.velocity
     
