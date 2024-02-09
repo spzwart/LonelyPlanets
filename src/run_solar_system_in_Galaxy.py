@@ -34,6 +34,7 @@ class PlanetarySystemIntegrationWithPerturbers(object):
                  maximal_timestep=1|units.Myr,
                  nperturbers = -1):
         self.model_time = 0 | units.yr
+        self.restart_time = 0 | units.Myr
         self.gravity_code = None
         self.stellar_code = None
         self.collision_detection = None
@@ -62,7 +63,11 @@ class PlanetarySystemIntegrationWithPerturbers(object):
         self.converter=nbody_system.nbody_to_si(1|units.MSun,
                                                 1000|units.au)
 
-        
+
+    #@property
+    #def current_time(self):
+    #    return self.restart_time + self.model_time
+    
     def print_wallclock_time(self):
         print(f"Timing: at t={self.model_time.in_(units.Myr)}:",
               f" initialization={self.wct_initialization.value_in(units.s)}", 
@@ -82,7 +87,10 @@ class PlanetarySystemIntegrationWithPerturbers(object):
     def initialize_sun_at_galactic_position(self, R_init):
         
         galaxy_code = MilkyWay_galaxy()
-        star = Particle()
+        if self.key == None:
+            star = Particle()
+        else:
+            star = Particle(key=int(self.key))
         star.type = "star"
         star.name = "Sun"
         star.mass = 1|units.MSun
@@ -93,7 +101,19 @@ class PlanetarySystemIntegrationWithPerturbers(object):
         star.vy += vcirc
         return star
         
-    def add_planetary_system(self, Nasteroids):
+    def add_planetary_system(self,
+                             planetary_system=None,
+                             Nasteroids=0):
+        if planetary_system==None:
+            self.add_new_planetary_system(Nasteroids)
+        else:
+            self.add_existing_planetary_system(planetary_system)
+            
+    def add_existing_planetary_system(self, planetary_system):
+        self.particles.add_particles(planetary_system)
+        self.key = self.get_perturbed_particle().key
+        
+    def add_new_planetary_system(self, Nasteroids):
 
         parent_star = Particles()
         if len(self.particles)>0:
@@ -183,17 +203,18 @@ class PlanetarySystemIntegrationWithPerturbers(object):
         self.collision_detection = self.gravity_code.stopping_conditions.collision_detection
         self.collision_detection.enable()
 
-
     def get_last_perturber_time(self):
         if self.perturber_list==None:
             return 0 | units.Myr
         else:
             return self.perturber_list[0][0].age
     def get_next_perturber_time(self):
+        print("Perturber list index:", self.perturber_list_index)
         if self.perturber_list_index>=1:
             t_next_perturber = self.perturber_list[self.perturber_list_index-1][0].age
         else:
             t_next_perturber = self.model_time + self.maximal_timestep
+        print("Next perturber time=", t_next_perturber.in_(units.Myr))
         return t_next_perturber
     
     def get_current_perturber_time(self):
@@ -204,8 +225,8 @@ class PlanetarySystemIntegrationWithPerturbers(object):
 
         if self.perturber_list != None:
             self.model_time = self.perturber_list[self.perturber_list_index][0].age
-        #print("Current model time=", self.model_time.in_(units.Myr))
-        #print("Evolve to time=", model_time.in_(units.Myr))
+        print("Current model time=", self.model_time.in_(units.Myr))
+        print("Evolve to time=", model_time.in_(units.Myr))
         while self.model_time<model_time:
 
             #print("time=", self.model_time.in_(units.Myr))
@@ -241,7 +262,9 @@ class PlanetarySystemIntegrationWithPerturbers(object):
         
         self.to_gravity.copy()
         #print("R=", self.gravity_code.particles.radius.in_(units.au))
-        time_next = self.get_next_perturber_time()
+        #Subtract the restart time, because gravity cannot start
+        #at any random moment in time
+        time_next = self.get_next_perturber_time()-self.restart_time
         while self.gravity_code.model_time<time_next-(1|units.yr):
             #print("time=", self.gravity_code.model_time.in_(units.Myr)-time_next.in_(units.Myr), self.gravity_code.model_time.in_(units.Myr)-self.model_time.in_(units.Myr))
             wct = wallclock.time()
@@ -258,7 +281,8 @@ class PlanetarySystemIntegrationWithPerturbers(object):
         else:
             self.perturber_list_index -= 1
 
-        self.model_time = time_next #self.get_current_perturber_time()
+        self.model_time = time_next + self.restart_time
+        #self.get_current_perturber_time()
         #print("Evolution done, current index=", self.perturber_list_index)
         #print("pos=", self.model_time.in_(units.Myr), self.particles.x.in_(units.pc))
 
@@ -300,12 +324,30 @@ class PlanetarySystemIntegrationWithPerturbers(object):
         self.gravity_code.stop()
         pass
 
+    def set_perturber_list_index(self):
+        self.perturber_list_index = len(self.perturber_list)-1
+        print("Perturber list time:", self.model_time.in_(units.Myr))
+        print("Perturber list index:", self.self.perturber_list_index)
+        if self.model_time>0|units.Myr:
+            for pli in range(self.perturber_list_index):
+                print("Perturber list index at age=",
+                      self.perturber_list[pli][0].age.in_(units.Myr))
+                if self.perturber_list[pli][0].age<self.model_time:
+                    self.perturber_list_index = pli
+                    break
+        print("Start calculation from perturber list time=", self.perturber_list[pli][0].age.in_(units.Myr), "index=", self.perturber_list_index)
+    
     def read_perturber_list(self, filename):
-        if self.nperturbers<0 or self.nperturbers>=1:
+        if self.nperturbers==0:
+            key = filename.split("_")[-1].split(".amuse")[0]
+            self.set_stellar_identity(key)
+            #if self.nperturbers<0 or self.nperturbers>=1:
+        else:
             self.perturber_list = read_set_from_file(filename, close_file=True)
             self.perturber_list = list(self.perturber_list.iter_history())
-            self.perturber_list_index = len(self.perturber_list)-1
-        
+
+            self.set_perturber_list_index()
+            
             pstars = self.perturber_list[self.perturber_list_index-1].copy()
             dt_perturbation = pstars[pstars.name=="Sun"][0].age
             pstars = self.perturber_list[self.perturber_list_index].copy()
@@ -517,7 +559,7 @@ class PlanetarySystemIntegrationWithPerturbers(object):
             self.particles.remove_particles(colliding_particles)
 
         if len(escapers)>0:
-            print(f"Number of particles lost N=: len(escapers)")
+            print(f"Number of particles lost N=: {len(escapers)}")
             self.write_escaping_particles(escapers)
 
         print(f"Time={self.model_time.in_(units.Myr)} Planet orbits: a={planets.semimajor_axis.in_(units.au)}, e={planets.eccentricity}")
@@ -639,6 +681,7 @@ def get_orbital_elements_of_planetary_system(star, planets):
                                              G=constants.G)
     planets.semimajor_axis = sma
     planets.eccentricity = ecc
+    planets.inclination = inc
     planets = planets[planets.eccentricity>=1]
     planets.eccentricity = 10
     planets.semimajor_axis = 1.e+10 | units.au
@@ -700,7 +743,7 @@ def integrate_planetary_system(Nasteroids):
 
     sys.stdout.flush()
     
-    dt_diag = 1 |units.Myr
+    dt_diag = 0.1 |units.Myr
     t_diag = dt_diag
     t_end = 100|units.Myr
     dt = 0.01 | units.Myr

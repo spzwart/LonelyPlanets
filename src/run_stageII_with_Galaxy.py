@@ -34,6 +34,85 @@ import math
 from run_cluster import MilkyWay_galaxy
 from run_solar_system_in_Galaxy import PlanetarySystemIntegrationWithPerturbers
 
+def read_restart_file(restart_file, restart_time=-1|units.Myr):
+    panda=read_set_from_file(restart_file, close_file=True)
+    if restart_time<0|units.Myr:
+        final_snapshot = list(panda.iter_history())[0]
+    else:
+        for pi in reversed(list(panda.iter_history())):
+            print("Restart at time=", pi[0].age.in_(units.Myr),
+                  "Requested time=", restart_time.in_(units.Myr))
+            if pi[0].age>=restart_time:
+                final_snapshot = pi
+                break
+    return final_snapshot
+
+def restart_LonelyPlanets_stageII(restart_file,
+                                  fperturbers,
+                                  Nnn,
+                                  restart_time,
+                                  time_end, integrator):
+
+    planetary_system = read_restart_file(restart_file, restart_time)
+    wct_initialization = wallclock.time()    
+    dt_diag = 0.1 | units.Myr
+    cluster_code = PlanetarySystemIntegrationWithPerturbers(nperturbers=Nnn,
+                                                            maximal_timestep=dt_diag)
+    cluster_code.add_planetary_system(planetary_system=planetary_system)
+    cluster_code.model_time = planetary_system[0].age
+    cluster_code.restart_time = planetary_system[0].age
+
+    cluster_code.read_perturber_list(fperturbers)
+
+    include_stellar_evolution = False
+    if include_stellar_evolution:
+        if(len(restart_file))>0:
+           print("restart with stellar is not tested.")
+           print("Stop the code.")
+           exit(-1)
+        cluster_code.start_stellar_code()
+    cluster_code.start_gravity_code(integrator)
+
+    cluster_code.determine_orbital_parameters()
+    galaxy_code = MilkyWay_galaxy()
+    
+    gravity = bridge.Bridge(verbose=False, use_threading=False)
+    gravity.add_system(cluster_code, (galaxy_code,))
+    gravity.timestep=0.5*dt_diag
+
+    cluster_code.wct_initialization = (wallclock.time()-wct_initialization) | units.s    
+    simulation_time = 0|units.Myr
+    cluster_code.write_planetary_system()
+    
+    dt = min(time_end, dt_diag)
+    t_diag = dt_diag
+    while cluster_code.model_time<time_end:
+        simulation_time += dt
+
+        gravity.evolve_model(simulation_time)
+
+        if simulation_time>t_diag:
+            t_diag += dt_diag
+            cluster_code.write_planetary_system()
+        sys.stdout.flush()
+
+        if cluster_code.terminating_criterium_reached():
+            print("Stop the run due to lost planets/asteroids.")
+            time_end = t_diag
+
+
+        if os.path.isfile("STOP"):
+            file = open("STOP", "r")
+            keys = file.readlines()
+            file.close() 
+            for key in keys:
+                if str(key) in str(cluster_code.key):
+                    print("Stop the run by manual intervention.")
+                    time_end = t_diag
+            #os.remove("STOP") 
+
+    gravity.stop()
+    cluster_code.print_wallclock_time()
 
 def integrate_planetary_system_LonelyPlanets(fperturbers, Nnn, Nasteroids,
                                              time_end, integrator):
@@ -43,7 +122,7 @@ def integrate_planetary_system_LonelyPlanets(fperturbers, Nnn, Nasteroids,
     cluster_code = PlanetarySystemIntegrationWithPerturbers(nperturbers=Nnn,
                                                             maximal_timestep=dt_diag)
     cluster_code.read_perturber_list(fperturbers)
-    cluster_code.add_planetary_system(Nasteroids)
+    cluster_code.add_planetary_system(Nasteroids=Nasteroids)
 
     include_stellar_evolution = False
     if include_stellar_evolution:
@@ -94,7 +173,7 @@ def integrate_planetary_system_LonelyPlanets(fperturbers, Nnn, Nasteroids,
 
     gravity.stop()
     cluster_code.print_wallclock_time()
-
+    
 def new_option_parser():
     from amuse.units.optparse import OptionParser
     result = OptionParser()
@@ -109,6 +188,13 @@ def new_option_parser():
     result.add_option("-I", dest="integrator",
                       type="int", default = 8,
                       help="integrator id (Huayno) [%default]")
+    result.add_option("--Restart", 
+                      dest="restart_file", default="",
+                      help="Restart from file [%default]")
+    result.add_option("--t_restart", unit=units.Myr,
+                      type="float",
+                      dest="restart_time", default=-1|units.Myr,
+                      help="Restart time [%default]")
     result.add_option("-f", 
                       dest="fperturbers",
                       #default = "lps_key_13544424148568912489.amuse",
@@ -127,9 +213,19 @@ if __name__ in ('__main__', '__plot__'):
 
     if o.seed>0:
         np.random.seed(o.seed)
-    integrate_planetary_system_LonelyPlanets(o.fperturbers,
-                                             o.Nnn,
-                                             o.Nasteroids,
-                                             o.time_end,
-                                             o.integrator)
+
+    if len(o.restart_file) == 0:
+        integrate_planetary_system_LonelyPlanets(o.fperturbers,
+                                                 o.Nnn,
+                                                 o.Nasteroids,
+                                                 o.time_end,
+                                                 o.integrator)
+    else:
+        print(f"Restart from {o.restart_file} at t= {o.restart_time}")
+        restart_LonelyPlanets_stageII(o.restart_file,
+                                      o.fperturbers,
+                                      o.Nnn,
+                                      o.restart_time,
+                                      o.time_end,
+                                      o.integrator)
     
