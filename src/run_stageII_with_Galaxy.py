@@ -55,7 +55,7 @@ def restart_LonelyPlanets_stageII(restart_file,
 
     planetary_system = read_restart_file(restart_file, restart_time)
     wct_initialization = wallclock.time()    
-    dt_diag = 0.1 | units.Myr
+    dt_diag = 1.0 | units.Myr
     cluster_code = PlanetarySystemIntegrationWithPerturbers(nperturbers=Nnn,
                                                             maximal_timestep=dt_diag)
     cluster_code.add_planetary_system(planetary_system=planetary_system)
