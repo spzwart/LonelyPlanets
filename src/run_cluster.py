@@ -176,7 +176,6 @@ def write_perturbers_to_file(model_time, star, perturbers):
     write_set_to_file(bodies, filename,
                       close_file=True,
                       append_to_file=True)
-    print("File written:", filename, "N_pert=", len(perturbers))
 
 def run_LonelyPlanets(bodies, 
                       time_end=10 | units.Myr,
@@ -212,7 +211,7 @@ def run_LonelyPlanets(bodies,
     
     converter=nbody_system.nbody_to_si(bodies.mass.sum(), time_end)
     
-    cluster_code = ph4(converter, number_of_workers=24)
+    cluster_code = ph4(converter, number_of_workers=12)
     #cluster_code = Petar(converter, number_of_workers=12)
     print(cluster_code.parameters)
     #cluster_code.parameters.epsilon_squared = (100|units.au)**2
