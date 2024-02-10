@@ -212,7 +212,7 @@ def run_LonelyPlanets(bodies,
     
     converter=nbody_system.nbody_to_si(bodies.mass.sum(), time_end)
     
-    cluster_code = ph4(converter, number_of_workers=12)
+    cluster_code = ph4(converter, number_of_workers=24)
     #cluster_code = Petar(converter, number_of_workers=12)
     print(cluster_code.parameters)
     #cluster_code.parameters.epsilon_squared = (100|units.au)**2
@@ -237,6 +237,7 @@ def run_LonelyPlanets(bodies,
 
     t_diag = model_time
     dt_diag = 1|units.Myr
+    Nsn = 0
     while gravity.model_time<time_end:
 
         stellar.evolve_model(model_time+dt)
@@ -244,6 +245,12 @@ def run_LonelyPlanets(bodies,
             resolve_supernova(supernova_detection, bodies, model_time)
             channel_from_se.copy_attributes(["mass"])
             channel_to_gd.copy_attributes(["mass", "vx", "vy", "vz"])
+            Nsn += 1
+            sn_file = "supernova_i{0:06}.amuse".format(Nsn)
+            write_set_to_file(bodies, sn_file,
+                              close_file=True,
+                              append_to_file=True)
+            
         else:
             channel_from_se.copy()
             channel_to_gd.copy_attributes(["mass"])
