@@ -166,9 +166,11 @@ def run_LonelyPlanets(bodies,
 
     galaxy_code = MilkyWay_galaxy()
 
-    Rinit = 8.5|units.kpc
+    Rinit = 8500|units.pc
     bodies.x += Rinit
-    bodies.vy = 1.0*galaxy_code.circular_velocity(Rinit)
+    bodies.vy = galaxy_code.circular_velocity(Rinit)
+    bodies.vx = -10.1|units.kms
+    bodies.vz = 7.5|units.kms
 
     stellar = SeBa()
     stellar.particles.add_particles(bodies)
