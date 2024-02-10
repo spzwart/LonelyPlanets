@@ -92,6 +92,28 @@ class MilkyWay_galaxy(object):
 
         return (vel_circb + vel_circd + vel_circh)**0.5 
 
+def resolve_supernova(supernova_detection, bodies, time):
+    if supernova_detection.is_set():
+        print("At time=", time.in_(units.Myr), \
+              len(supernova_detection.particles(0)), 'supernova(e) detected')
+
+        Nsn = 0
+        for ci in range(len(supernova_detection.particles(0))):
+            print(supernova_detection.particles(0))
+            particles_in_supernova \
+                = Particles(particles=supernova_detection.particles(0))
+            natal_kick_x = particles_in_supernova.natal_kick_x
+            natal_kick_y = particles_in_supernova.natal_kick_y
+            natal_kick_z = particles_in_supernova.natal_kick_z
+
+            particles_in_supernova \
+                = particles_in_supernova.get_intersecting_subset_in(bodies)
+            particles_in_supernova.vx += natal_kick_x
+            particles_in_supernova.vy += natal_kick_y
+            particles_in_supernova.vz += natal_kick_z
+            Nsn += 1
+        print('Resolved', Nsn, 'supernova(e)')
+    
 def ZAMS_radius(mass):
     log_mass = np.log10(mass.value_in(units.MSun))
     mass_sq = (mass.value_in(units.MSun))**2
@@ -177,6 +199,9 @@ def run_LonelyPlanets(bodies,
     channel_from_se = stellar.particles.new_channel_to(bodies)
     channel_to_se = bodies.new_channel_to(stellar.particles)
 
+    supernova_detection = stellar.stopping_conditions.supernova_detection
+    supernova_detection.enable()
+    
     stellar.evolve_model(0|units.Myr)
     channel_from_se.copy()
     index = 0
@@ -214,14 +239,19 @@ def run_LonelyPlanets(bodies,
     dt_diag = 1|units.Myr
     while gravity.model_time<time_end:
 
-        stellar.evolve_model(gravity.model_time+dt)
-        channel_from_se.copy()
-        channel_to_gd.copy_attributes(["mass"])
-        
-        gravity.evolve_model(gravity.model_time+dt)
+        stellar.evolve_model(model_time+dt)
+        if supernova_detection.is_set():        
+            resolve_supernova(supernova_detection, bodies, model_time)
+            channel_from_se.copy_attributes(["mass"])
+            channel_to_gd.copy_attributes(["mass", "vx", "vy", "vz"])
+        else:
+            channel_from_se.copy()
+            channel_to_gd.copy_attributes(["mass"])
+        model_time = stellar.model_time
+            
+        gravity.evolve_model(model_time)
         channel_from_gd.copy()
 
-        model_time = gravity.model_time
         for star in suns:
             perturbers = find_perturbers(star, bodies, Nnn)
             write_perturbers_to_file(model_time, star, perturbers)
