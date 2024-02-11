@@ -346,7 +346,7 @@ if __name__ in ('__main__', '__plot__'):
     print(np.mean(suns.mass.in_(units.MSun)).in_(units.MSun))
     suns.mass = 1|units.MSun
     suns.name = "Sun"
-    print(bodies)
+    print("N=", len(bodies))
     run_LonelyPlanets(bodies,
                       o.t_end,
                       o.dt,
