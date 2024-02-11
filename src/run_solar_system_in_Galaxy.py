@@ -327,7 +327,7 @@ class PlanetarySystemIntegrationWithPerturbers(object):
     def set_perturber_list_index(self):
         self.perturber_list_index = len(self.perturber_list)-1
         print("Perturber list time:", self.model_time.in_(units.Myr))
-        print("Perturber list index:", self.self.perturber_list_index)
+        print("Perturber list index:", self.perturber_list_index)
         if self.model_time>0|units.Myr:
             for pli in range(self.perturber_list_index):
                 print("Perturber list index at age=",
