@@ -1,6 +1,7 @@
 """
    Minimalistic routine for running a gravity code
 """
+import os
 from amuse.lab import *
 #from amuse.community.petar.interface import Petar
 from amuse.couple import bridge
