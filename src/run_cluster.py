@@ -177,6 +177,20 @@ def write_perturbers_to_file(model_time, star, perturbers):
                       close_file=True,
                       append_to_file=True)
 
+def write_escaping_particles(escapers, model_time):
+    escapers.age = model_time
+    filename = "cl_escapers.amuse"
+    write_set_to_file(escapers,
+                      filename,
+                      close_file=True,
+                      append_to_file=True)
+
+def find_escapers(bodies, model_time):
+    rmax = 10|units.kpc
+    escapers = asteroids.select(lambda r: r.length>rmax, ["position"])
+    write_escaping_particles(escapers, model_time)
+    return escapers
+
 def run_LonelyPlanets(bodies, 
                       time_end=10 | units.Myr,
                       dt=0.001|units.Myr,
@@ -258,6 +272,14 @@ def run_LonelyPlanets(bodies,
         gravity.evolve_model(model_time)
         channel_from_gd.copy()
 
+        escapers = find_escapers(bodies, model_time)
+        if len(escapers)>0:
+            print(f"At time={model_time.in_(units.Myr)}",
+                  " removed {len(escapers} removed from Galaxy")
+            bodies.remove_particles(escapers)
+            bodies.synchronize_to(stellar.particles)
+            bodies.synchronize_to(cluster_code.particles)
+        
         for star in suns:
             perturbers = find_perturbers(star, bodies, Nnn)
             write_perturbers_to_file(model_time, star, perturbers)
@@ -270,6 +292,12 @@ def run_LonelyPlanets(bodies,
             write_set_to_file(bodies, fcluster,
                               close_file=True,
                               append_to_file=True)
+
+        if os.path.isfile("STOP"):
+            print(f"Stop the simulation at time={model_time.in_(units.Myr)")
+            os.remove("STOP")
+            break
+            
     gravity.stop()
 
 def new_option_parser():
