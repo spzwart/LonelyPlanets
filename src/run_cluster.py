@@ -298,7 +298,7 @@ def run_LonelyPlanets(bodies,
                               append_to_file=True)
 
         if os.path.isfile("STOP"):
-            print(f"Stop the simulation at time={model_time.in_(units.Myr)")
+            print(f"Stop the simulation at time={model_time.in_(units.Myr)}")
             os.remove("STOP")
             break
             
