@@ -231,8 +231,8 @@ def run_LonelyPlanets(bodies,
     
     converter=nbody_system.nbody_to_si(bodies.mass.sum(), 1|units.pc)
     
-    #cluster_code = ph4(converter, number_of_workers=12)
-    cluster_code = ph4(converter)
+    cluster_code = ph4(converter, number_of_workers=12)
+    #cluster_code = ph4(converter)
     #cluster_code = Petar(converter, number_of_workers=12)
     print(cluster_code.parameters)
     #cluster_code.parameters.epsilon_squared = (100|units.au)**2
