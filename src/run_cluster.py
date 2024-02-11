@@ -280,7 +280,7 @@ def run_LonelyPlanets(bodies,
         escapers = find_escapers(bodies, model_time)
         if len(escapers)>0:
             print(f"At time={model_time.in_(units.Myr)}",
-                  f" removed {len(escapers} removed from Galaxy")
+                  f" removed {len(escapers)} removed from Galaxy")
             bodies.remove_particles(escapers)
             bodies.synchronize_to(stellar.particles)
             bodies.synchronize_to(cluster_code.particles)
