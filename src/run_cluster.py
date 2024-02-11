@@ -193,7 +193,8 @@ def write_escaping_particles(escapers, model_time):
 def find_escapers(bodies, model_time):
     rmax = 10|units.kpc
     escapers = bodies.select(lambda r: r.length()>rmax, ["position"])
-    write_escaping_particles(escapers, model_time)
+    if (len(escapers)>0:
+       write_escaping_particles(escapers, model_time)
     return escapers
 
 def run_LonelyPlanets(bodies, 
@@ -314,7 +315,7 @@ def new_option_parser():
                       dest="NSuns", type="int",default = 1,
                       help="Number of Suns [%default]")
     result.add_option("--name", 
-                      dest="name", default = "",
+                      dest="name", default = "Sun",
                       help="identify Sun as planet-bearing star [%default]")
     result.add_option("-t", unit=units.Myr,
                       dest="t_end", type="float",default = 1|units.Myr,
