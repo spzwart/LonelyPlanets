@@ -208,9 +208,9 @@ def run_LonelyPlanets(bodies,
 
     Rinit = 8500|units.pc
     bodies.x += Rinit
-    bodies.vy = galaxy_code.circular_velocity(Rinit)
-    bodies.vx = -10.1|units.kms
-    bodies.vz = 7.5|units.kms
+    bodies.vy += galaxy_code.circular_velocity(Rinit)
+    bodies.vx += -10.1|units.kms
+    bodies.vz += 7.5|units.kms
 
     stellar = SeBa()
     stellar.particles.add_particles(bodies)
@@ -280,7 +280,7 @@ def run_LonelyPlanets(bodies,
         escapers = find_escapers(bodies, model_time)
         if len(escapers)>0:
             print(f"At time={model_time.in_(units.Myr)}",
-                  " removed {len(escapers} removed from Galaxy")
+                  f" removed {len(escapers} removed from Galaxy")
             bodies.remove_particles(escapers)
             bodies.synchronize_to(stellar.particles)
             bodies.synchronize_to(cluster_code.particles)
