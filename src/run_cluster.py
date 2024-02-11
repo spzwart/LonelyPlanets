@@ -302,6 +302,8 @@ def run_LonelyPlanets(bodies,
         if os.path.isfile("STOP"):
             print(f"Stop the simulation at time={model_time.in_(units.Myr)}")
             os.remove("STOP")
+            file = open("STOPPED", "w")
+            os.close(file)
             break
             
     gravity.stop()
