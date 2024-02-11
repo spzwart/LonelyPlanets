@@ -193,7 +193,7 @@ def write_escaping_particles(escapers, model_time):
 def find_escapers(bodies, model_time):
     rmax = 10|units.kpc
     escapers = bodies.select(lambda r: r.length()>rmax, ["position"])
-    if (len(escapers)>0:
+    if (len(escapers))>0:
        write_escaping_particles(escapers, model_time)
     return escapers
 
