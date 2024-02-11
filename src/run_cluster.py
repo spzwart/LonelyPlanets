@@ -105,7 +105,11 @@ def resolve_supernova(supernova_detection, bodies, time):
             natal_kick_x = particles_in_supernova.natal_kick_x
             natal_kick_y = particles_in_supernova.natal_kick_y
             natal_kick_z = particles_in_supernova.natal_kick_z
-
+            print("Kick velocity:",
+                  natal_kick_x.in_(units.kms),
+                  natal_kick_y.in_(units.kms),
+                  natal_kick_z.in_(units.kms))
+                  
             particles_in_supernova \
                 = particles_in_supernova.get_intersecting_subset_in(bodies)
             particles_in_supernova.vx += natal_kick_x
