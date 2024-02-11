@@ -335,7 +335,7 @@ class PlanetarySystemIntegrationWithPerturbers(object):
                 if self.perturber_list[pli][0].age<self.model_time:
                     self.perturber_list_index = pli
                     break
-        print("Start calculation from perturber list time=", self.perturber_list[pli][0].age.in_(units.Myr), "index=", self.perturber_list_index)
+            print("Start calculation from perturber list time=", self.perturber_list[pli][0].age.in_(units.Myr), "index=", self.perturber_list_index)
     
     def read_perturber_list(self, filename):
         if self.nperturbers==0:
