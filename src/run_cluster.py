@@ -302,6 +302,15 @@ def run_LonelyPlanets(bodies,
 
         if os.path.isfile("STOP"):
             print(f"Stop the simulation at time={model_time.in_(units.Myr)}")
+            new_end_time = file.readline()
+            file.close() 
+            if "Time" in new_end_time:
+                time_end = float(new_end_time.split("=")[1])
+                print(f"New end time for run at time={time_end.in_(units.Myr)}.")
+            else:
+                print("Stop the run by manual intervention.")
+                time_end = t_diag
+            
             os.remove("STOP")
             file = open("STOPPED", "w")
             os.close(file)

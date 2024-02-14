@@ -450,21 +450,21 @@ class PlanetarySystemIntegrationWithPerturbers(object):
         fmax = (m/r**2).max()
         print("minium distance=", dmin.in_(units.pc), "fmax=", fmax)
 
-        dlim = 1|units.pc
-        flim = ((1|units.MSun)/dlim**2).max()
+        dlim = 3.0|units.pc # rRHill of the Sun in Galactic potential
+        flim = (0.1|units.MSun)/dlim**2
         print("limits in distance:", dmin/dlim, "and force:", fmax/flim)
         
-        if dmin/dlim<1.0 or fmax/flim>10:
+        if dmin<dlim or fmax>flim:
             self.perturbers.add_particles(perturbers[:self.nperturbers])
-            print("Add perturbers:", len(self.perturbers))
-            print("self.perturbers.position.in_(units.pc)")
 
             self.gravity_code.particles.add_particles(self.perturbers)
             self.to_perturbers = self.gravity_code.particles.new_channel_to(self.perturbers)
             self.from_perturbers = self.perturbers.new_channel_to(self.gravity_code.particles)
 
             time_next = self.get_next_perturber_time()
-            print(f"Integrate with perturbers: N={len(self.perturbers)} from time={self.model_time.value_in(units.Myr)} to {(time_next).value_in(units.Myr)}")
+        print(f"Integrate with perturbers: N={len(self.perturbers)} from time={self.model_time.value_in(units.Myr)} to {(time_next).value_in(units.Myr)}: dmin={dmin.in_(units.pc)}, fmax={fmax}")
+
+
 
             
     def remove_perturbers(self):
