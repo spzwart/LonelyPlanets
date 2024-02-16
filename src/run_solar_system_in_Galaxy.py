@@ -374,7 +374,7 @@ class PlanetarySystemIntegrationWithPerturbers(object):
         if self.perturber_list_index==0:
             print("No perturbers added because end time reached.")
             time_next = self.get_next_perturber_time()
-            print(f"Integrate without perturbers: from time={self.model_time.value_in(units.Myr)} to {(time_next).value_in(units.Myr)}")
+            print(f"Integrate without perturbers: from time={self.model_time.value_in(units.Myr)}.")
             return
         
         perturbers = self.perturber_list[self.perturber_list_index]
