@@ -110,9 +110,21 @@ class PlanetarySystemIntegrationWithPerturbers(object):
             self.add_existing_planetary_system(planetary_system)
             
     def add_existing_planetary_system(self, planetary_system):
+        
+        sun = planetary_system[planetary_system.name=="Sun"]
+        star_from_perturber_list = self.particles[self.particles.name=="Sun"][0]
+
+        # move planetary system to perturber-list star
+        planetary_system.position -= sun.position
+        planetary_system.velocity -= sun.velocity
+        planetary_system.position -= star_from_perturber_list.position
+        planetary_system.velocity -= star_from_perturber_list.velocity
+        #And remove the perturber-list star
+        self.particles.remove_particle(star_from_perturber_list)
+        
         self.particles.add_particles(planetary_system)
         self.key = self.get_perturbed_particle().key
-        
+
     def add_new_planetary_system(self, Nasteroids):
 
         parent_star = Particles()
@@ -193,6 +205,10 @@ class PlanetarySystemIntegrationWithPerturbers(object):
         self.gravity_code = Huayno(convert_nbody=self.converter,
                                    redirection="none")
         self.gravity_code.parameters.inttype_parameter = integrator
+
+        sun = self.particles[self.particles.name=="Sun"]
+        #print("Add planetary (start_gravity_code) system:", sun)
+
         self.gravity_code.particles.add_particles(self.particles)
         self.gravity_code.parameters.timestep_parameter = 0.03
         print(self.gravity_code.parameters)
@@ -243,12 +259,13 @@ class PlanetarySystemIntegrationWithPerturbers(object):
             self.remove_lost_planets()
 
     def evolve_system_for_one_step(self):
-        print("evolve from", self.model_time.in_(units.Myr),
+        print("Evolve from", self.model_time.in_(units.Myr),
               "to ", self.get_next_perturber_time().in_(units.Myr),
               "time index=", self.perturber_list_index)
         sun = self.particles[self.particles.name=="Sun"][0]
         print("pos=", self.model_time.in_(units.Myr), sun.position.in_(units.pc))
         if self.stellar_code != None:
+            print("Evolve stars.")
             wct = wallclock.time() 
             self.stellar_code.evolve_model(self.model_time)
             self.wct_stellar += (wallclock.time()-wct) | units.s
@@ -330,9 +347,10 @@ class PlanetarySystemIntegrationWithPerturbers(object):
         print("Perturber list index:", self.perturber_list_index)
         if self.model_time>0|units.Myr:
             for pli in range(self.perturber_list_index):
-                print("Perturber list index at age=",
-                      self.perturber_list[pli][0].age.in_(units.Myr))
-                if self.perturber_list[pli][0].age<self.model_time:
+                #print("Perturber list index at age=",
+                #      self.perturber_list[pli][0].age.in_(units.Myr),
+                #      self.perturber_list[pli][0].position.in_(units.pc))
+                if self.perturber_list[pli][0].age<=self.model_time:
                     self.perturber_list_index = pli
                     break
             print("Start calculation from perturber list time=", self.perturber_list[pli][0].age.in_(units.Myr), "index=", self.perturber_list_index)
@@ -343,7 +361,8 @@ class PlanetarySystemIntegrationWithPerturbers(object):
             self.set_stellar_identity(key)
             #if self.nperturbers<0 or self.nperturbers>=1:
         else:
-            self.perturber_list = read_set_from_file(filename, close_file=True)
+            self.perturber_list = read_set_from_file(filename,
+                                                     close_file=True)
             self.perturber_list = list(self.perturber_list.iter_history())
 
             self.set_perturber_list_index()
@@ -357,7 +376,17 @@ class PlanetarySystemIntegrationWithPerturbers(object):
 
             star = pstars[pstars.name=="Sun"][0].copy()
             self.set_stellar_identity(star.key)
+            print("Star from perturber list: pos=", star.position.in_(units.pc))
+
+            ## Add star from perturber list in particle set
+            ## We should keep its position and velocity, 
+            ## but replace it with the planetary system's host
+            ## in add_existing_planetary_system
             self.particles.add_particle(star)
+            
+            print("Current particles:", self.particles)
+            star_tmp = self.particles[self.particles.name=="Sun"][0]
+            print("Star from planetary system: pos=", star_tmp.position.in_(units.pc))
         
             #print("N==", len(pstars), dt_perturbation.in_(units.Myr))
             if self.nperturbers<0:
@@ -448,11 +477,25 @@ class PlanetarySystemIntegrationWithPerturbers(object):
         r = (perturbers.position-star.position).lengths()
         m = perturbers.mass
         fmax = (m/r**2).max()
-        print("minium distance=", dmin.in_(units.pc), "fmax=", fmax)
+        print("minium distance=", dmin.in_(units.pc),
+              "fmax=", fmax.in_(units.kg/units.km**2),
+              "mpert=", m.in_(units.MSun))
 
         dlim = 3.0|units.pc # rRHill of the Sun in Galactic potential
         flim = (0.1|units.MSun)/dlim**2
-        print("limits in distance:", dmin/dlim, "and force:", fmax/flim)
+        #print("Limits in distance:", dmin/dlim, "and force:", fmax/flim)
+        if dmin<dlim: 
+            print(f"NN in perturbing distance ({dmin/dlim}), ", end='')
+            if fmax>flim:            
+                print(f"and strongly perturbing ({fmax/flim})")
+            else:
+                print(".")
+        else:
+            print(f"NN not in perturbing distance ({dmin/dlim}), ", end='')
+            if fmax>flim:            
+                print(f"but strongly perturbing ({fmax/flim})")
+            else:
+                print(".")
         
         if dmin<dlim or fmax>flim:
             self.perturbers.add_particles(perturbers[:self.nperturbers])
@@ -461,8 +504,8 @@ class PlanetarySystemIntegrationWithPerturbers(object):
             self.to_perturbers = self.gravity_code.particles.new_channel_to(self.perturbers)
             self.from_perturbers = self.perturbers.new_channel_to(self.gravity_code.particles)
 
-            time_next = self.get_next_perturber_time()
-        print(f"Integrate with perturbers: N={len(self.perturbers)} from time={self.model_time.value_in(units.Myr)} to {(time_next).value_in(units.Myr)}: dmin={dmin.in_(units.pc)}, fmax={fmax}")
+        time_next = self.get_next_perturber_time()
+        print(f"Integrate with perturbers: N={len(self.perturbers)} from time={self.model_time.value_in(units.Myr)} to {(time_next).value_in(units.Myr)}: dmin={dmin.in_(units.pc)}, fmax={fmax.in_(units.kg/units.km**2)}")
 
 
 
@@ -537,13 +580,12 @@ class PlanetarySystemIntegrationWithPerturbers(object):
         mask = pericentra<10|units.RSun
         lost_particles = panda[mask]
         
-        print("Particles potentially colliding with the Sun: N=",
-              len(lost_particles))
         # near the Sun
         d = (sun.position-lost_particles.position).lengths()
         mask = d<0.1|units.au
         colliding_particles = lost_particles[mask]
-        print("Particles also close to the Sun: N=",
+        #print("Particles also close to the Sun: N=", len(lost_particles))
+        print("Particles colliding with the Sun: N=",
               len(colliding_particles))
 
         # near pericenter

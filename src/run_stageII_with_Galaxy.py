@@ -54,15 +54,19 @@ def restart_LonelyPlanets_stageII(restart_file,
                                   time_end, integrator):
 
     planetary_system = read_restart_file(restart_file, restart_time)
+
+    sun = planetary_system[planetary_system.name=="Sun"][0]
+    #print("Add planetary (restart_LP_stageII) system:", sun)
+    
     wct_initialization = wallclock.time()    
     dt_diag = 1.0 | units.Myr
-    cluster_code = PlanetarySystemIntegrationWithPerturbers(nperturbers=Nnn,
-                                                            maximal_timestep=dt_diag)
-    cluster_code.add_planetary_system(planetary_system=planetary_system)
-    cluster_code.model_time = planetary_system[0].age
-    cluster_code.restart_time = planetary_system[0].age
+    cluster_code = PlanetarySystemIntegrationWithPerturbers(maximal_timestep=dt_diag,
+                                                            nperturbers=Nnn,)
+    cluster_code.model_time = sun.age
+    cluster_code.restart_time = sun.age
 
     cluster_code.read_perturber_list(fperturbers)
+    cluster_code.add_planetary_system(planetary_system=planetary_system[:100])
 
     include_stellar_evolution = False
     if include_stellar_evolution:
@@ -91,6 +95,7 @@ def restart_LonelyPlanets_stageII(restart_file,
 
         gravity.evolve_model(simulation_time)
 
+        print(f"Timing:{simulation_time.in_(units.Myr)}, {t_diag.in_(units.Myr)}, {cluster_code.model_time.in_(units.Myr)}, {gravity.model_time.in_(units.Myr)}")
         if simulation_time>t_diag:
             t_diag += dt_diag
             cluster_code.write_planetary_system()
