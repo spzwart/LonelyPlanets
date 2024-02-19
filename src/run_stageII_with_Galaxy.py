@@ -66,7 +66,7 @@ def restart_LonelyPlanets_stageII(restart_file,
     cluster_code.restart_time = sun.age
 
     cluster_code.read_perturber_list(fperturbers)
-    cluster_code.add_planetary_system(planetary_system=planetary_system[:100])
+    cluster_code.add_planetary_system(planetary_system=planetary_system)
 
     include_stellar_evolution = False
     if include_stellar_evolution:
