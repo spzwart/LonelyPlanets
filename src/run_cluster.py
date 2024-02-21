@@ -347,7 +347,8 @@ if __name__ in ('__main__', '__plot__'):
     bodies = read_set_from_file(o.filename)
     if len(o.name)>0:
         suns = bodies[bodies.name==o.name]
-    else:
+        print(f"Identify named stars as Suns: N={len(suns)}")
+    if len(suns)==0:
         suns = bodies[bodies.mass>0.8|units.MSun]
         suns = suns[suns.mass<1.2|units.MSun]
         if len(suns)<o.NSuns:
@@ -355,6 +356,7 @@ if __name__ in ('__main__', '__plot__'):
             exit(-1)
         if o.NSuns>0:
             suns = suns.random_sample(o.NSuns)
+        print(f"Identify stars between 0.8 and 1.2 MSun as Suns: N={len(suns)}")
 
     print(np.mean(suns.mass.in_(units.MSun)).in_(units.MSun))
     suns.mass = 1|units.MSun
