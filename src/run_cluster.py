@@ -263,7 +263,7 @@ def run_LonelyPlanets(bodies,
         stellar.evolve_model(model_time+dt)
         if supernova_detection.is_set():        
             resolve_supernova(supernova_detection, bodies, model_time)
-            channel_from_se.copy_attributes(["mass"])
+            channel_from_se.copy_attributes(["mass", "stellar_type"])
             channel_to_gd.copy_attributes(["mass", "vx", "vy", "vz"])
             Nsn += 1
             sn_file = "supernova_i{0:06}.amuse".format(Nsn)
