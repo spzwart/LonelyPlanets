@@ -142,7 +142,8 @@ class PlanetarySystemIntegrationWithPerturbers(object):
         planetary_system.position-=sun.position
         planetary_system.velocity-=sun.velocity
         planetary_system.remove_particle(sun)
-        planets = planetary_system[4:]
+        #planets = planetary_system[4:] #includes Jupiter and up
+        planets = planetary_system[2:] # includes Earth and up
         planets = planets[:-1]
         planets.type = "planet"
 
@@ -814,8 +815,8 @@ def generate_planetary_system(parent_star, Nasteroids):
     planetary_system.position-=sun.position
     planetary_system.velocity-=sun.velocity
     planetary_system.remove_particle(sun)
-    planets = planetary_system[2:]
-    #planets = planetary_system[4:]
+    #planets = planetary_system[2:]
+    planets = planetary_system[4:]
     planets = planets[:-1]
 
     planets.type = "planet"
