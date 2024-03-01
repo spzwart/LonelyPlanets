@@ -142,8 +142,8 @@ class PlanetarySystemIntegrationWithPerturbers(object):
         planetary_system.position-=sun.position
         planetary_system.velocity-=sun.velocity
         planetary_system.remove_particle(sun)
-        planets = planetary_system[4:] #includes Jupiter and up
-        #planets = planetary_system[2:] # includes Earth and up
+        planets = planetary_system[2:] #includes Jupiter and up
+        #planets = planetary_system[4:] # includes Earth and up
         planets = planets[:-1]
         planets.type = "planet"
 
@@ -204,6 +204,7 @@ class PlanetarySystemIntegrationWithPerturbers(object):
             self.stellar_code = None
     def start_gravity_code(self, integrator=0):
         self.gravity_code = Huayno(convert_nbody=self.converter,
+                                   mode="openmp",
                                    redirection="none")
         self.gravity_code.parameters.inttype_parameter = integrator
 
