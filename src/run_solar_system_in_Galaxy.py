@@ -142,8 +142,8 @@ class PlanetarySystemIntegrationWithPerturbers(object):
         planetary_system.position-=sun.position
         planetary_system.velocity-=sun.velocity
         planetary_system.remove_particle(sun)
-        planets = planetary_system[2:] #includes Jupiter and up
-        #planets = planetary_system[4:] # includes Earth and up
+        #planets = planetary_system[2:] #includes Jupiter and up
+        planets = planetary_system[4:] # includes Earth and up
         planets = planets[:-1]
         planets.type = "planet"
 
@@ -211,7 +211,7 @@ class PlanetarySystemIntegrationWithPerturbers(object):
         #print("Add planetary (start_gravity_code) system:", sun)
 
         self.gravity_code.particles.add_particles(self.particles)
-        self.gravity_code.parameters.timestep_parameter = 0.03
+        self.gravity_code.parameters.timestep_parameter = 0.015
         print(self.gravity_code.parameters)
 
         self.from_gravity = self.gravity_code.particles.new_channel_to(self.particles)
@@ -815,8 +815,8 @@ def generate_planetary_system(parent_star, Nasteroids):
     planetary_system.position-=sun.position
     planetary_system.velocity-=sun.velocity
     planetary_system.remove_particle(sun)
-    planets = planetary_system[2:]
-    #planets = planetary_system[4:]
+    #planets = planetary_system[2:]
+    planets = planetary_system[4:]
     planets = planets[:-1]
 
     planets.type = "planet"
