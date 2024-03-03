@@ -111,16 +111,19 @@ class PlanetarySystemIntegrationWithPerturbers(object):
             
     def add_existing_planetary_system(self, planetary_system):
         
+        #planetary_system.move_to_center()
         sun = planetary_system[planetary_system.name=="Sun"]
-        star_from_perturber_list = self.particles[self.particles.name=="Sun"][0]
+        #star_from_perturber_list = self.particles[self.particles.name=="Sun"][0]
 
+        print("planetary system pos:", sun.position.in_(units.pc))
+        #print("Sun from perturber list pos:", star_from_perturber_list.position.in_(units.pc))
         # move planetary system to perturber-list star
-        planetary_system.position -= sun.position
-        planetary_system.velocity -= sun.velocity
-        planetary_system.position -= star_from_perturber_list.position
-        planetary_system.velocity -= star_from_perturber_list.velocity
+        #planetary_system.position += sun.position
+        #planetary_system.velocity += sun.velocity
+        #planetary_system.position += star_from_perturber_list.position
+        #planetary_system.velocity += star_from_perturber_list.velocity
         #And remove the perturber-list star
-        self.particles.remove_particle(star_from_perturber_list)
+        #self.particles.remove_particle(star_from_perturber_list)
         
         self.particles.add_particles(planetary_system)
         self.key = self.get_perturbed_particle().key
@@ -363,15 +366,20 @@ class PlanetarySystemIntegrationWithPerturbers(object):
             self.set_stellar_identity(key)
             #if self.nperturbers<0 or self.nperturbers>=1:
 
+            """
             perturber_list = read_set_from_file(filename,
                                                 close_file=True)
             perturber_list = list(perturber_list.iter_history())
-            pstars = perturber_list[-1].copy()
+            pstars = perturber_list[0].copy() # last snapshot
             star = pstars[pstars.name=="Sun"][0].copy()
             self.set_stellar_identity(star.key)
             self.particles.add_particle(star)
+            ###
+            self.particles.move_to_center()
+            ###
             print(star)
             print("Star from perturber list: pos=", star.position.in_(units.pc))            
+            """
         else:
             self.perturber_list = read_set_from_file(filename,
                                                      close_file=True)

@@ -57,6 +57,7 @@ def restart_LonelyPlanets_stageII(restart_file,
 
     sun = planetary_system[planetary_system.name=="Sun"][0]
     #print("Add planetary (restart_LP_stageII) system:", sun)
+    print("Suns position:", sun.position.in_(units.pc))
     
     wct_initialization = wallclock.time()    
     dt_diag = 1.0 | units.Myr
@@ -67,6 +68,8 @@ def restart_LonelyPlanets_stageII(restart_file,
 
     cluster_code.read_perturber_list(fperturbers)
     cluster_code.add_planetary_system(planetary_system=planetary_system)
+    #cluster_code.particles.position += sun.position
+    #cluster_code.particles.velocity += sun.velocity
 
     include_stellar_evolution = False
     if include_stellar_evolution:
