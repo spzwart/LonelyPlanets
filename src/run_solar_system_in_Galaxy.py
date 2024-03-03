@@ -357,10 +357,21 @@ class PlanetarySystemIntegrationWithPerturbers(object):
             print("Start calculation from perturber list time=", self.perturber_list[pli][0].age.in_(units.Myr), "index=", self.perturber_list_index)
     
     def read_perturber_list(self, filename):
+        print("read perturber list:", filename)
         if self.nperturbers==0:
             key = filename.split("_")[-1].split(".amuse")[0]
             self.set_stellar_identity(key)
             #if self.nperturbers<0 or self.nperturbers>=1:
+
+            perturber_list = read_set_from_file(filename,
+                                                close_file=True)
+            perturber_list = list(perturber_list.iter_history())
+            pstars = perturber_list[-1].copy()
+            star = pstars[pstars.name=="Sun"][0].copy()
+            self.set_stellar_identity(star.key)
+            self.particles.add_particle(star)
+            print(star)
+            print("Star from perturber list: pos=", star.position.in_(units.pc))            
         else:
             self.perturber_list = read_set_from_file(filename,
                                                      close_file=True)
@@ -395,7 +406,7 @@ class PlanetarySystemIntegrationWithPerturbers(object):
             if self.nperturbers>len(pstars)-1:
                 print("Too many nearest neighbors requested for cluster.")
                 exit(-1)
-            
+                  
     def add_perturbers(self):
         self.add_perturbers_self_centered()
         #self.add_perturbers_sun_centered()
