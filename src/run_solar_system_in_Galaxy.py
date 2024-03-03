@@ -211,7 +211,7 @@ class PlanetarySystemIntegrationWithPerturbers(object):
         #print("Add planetary (start_gravity_code) system:", sun)
 
         self.gravity_code.particles.add_particles(self.particles)
-        self.gravity_code.parameters.timestep_parameter = 0.015
+        #self.gravity_code.parameters.timestep_parameter = 0.015
         print(self.gravity_code.parameters)
 
         self.from_gravity = self.gravity_code.particles.new_channel_to(self.particles)
