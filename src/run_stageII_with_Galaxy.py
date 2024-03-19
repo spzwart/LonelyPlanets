@@ -61,7 +61,8 @@ def restart_LonelyPlanets_stageII(restart_file,
     
     wct_initialization = wallclock.time()    
     #dt_diag = 1.0 | units.Myr
-    dt_diag = 0.01 | units.Myr
+    dt_exec = 0.01 | units.Myr
+    dt_diag = 1.0 | units.Myr
     cluster_code = PlanetarySystemIntegrationWithPerturbers(maximal_timestep=dt_diag,
                                                             nperturbers=Nnn,)
     cluster_code.model_time = sun.age
@@ -86,13 +87,13 @@ def restart_LonelyPlanets_stageII(restart_file,
     
     gravity = bridge.Bridge(verbose=False, use_threading=False)
     gravity.add_system(cluster_code, (galaxy_code,))
-    gravity.timestep=0.5*dt_diag
+    gravity.timestep=dt_exec
 
     cluster_code.wct_initialization = (wallclock.time()-wct_initialization) | units.s    
     simulation_time = 0|units.Myr
     cluster_code.write_planetary_system()
     
-    dt = min(time_end, dt_diag)
+    dt = min(dt_exec, dt_diag)
     t_diag = dt_diag
     while cluster_code.model_time<time_end:
         simulation_time += dt
