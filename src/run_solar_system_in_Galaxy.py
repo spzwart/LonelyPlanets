@@ -26,12 +26,12 @@ from run_cluster import MilkyWay_galaxy
 from make_initial_cluster import ZAMS_radius
 class ConstantParameters:
     __slots__ = ()
-    MAXIMAL_TIMESTEP = 1 | units.Myr
+    MAXIMAL_TIMESTEP = 0.01 | units.Myr
 
 
 class PlanetarySystemIntegrationWithPerturbers(object):
     def __init__(self,
-                 maximal_timestep=1|units.Myr,
+                 maximal_timestep=0.01|units.Myr,
                  nperturbers = -1):
         self.model_time = 0 | units.yr
         self.restart_time = 0 | units.Myr
