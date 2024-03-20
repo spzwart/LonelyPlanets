@@ -60,9 +60,8 @@ def restart_LonelyPlanets_stageII(restart_file,
     print("Suns position:", sun.position.in_(units.pc))
     
     wct_initialization = wallclock.time()    
-    #dt_diag = 1.0 | units.Myr
-    dt_exec = 0.01 | units.Myr
     dt_diag = 1.0 | units.Myr
+    dt_exec = 0.5*dt_diag
     cluster_code = PlanetarySystemIntegrationWithPerturbers(maximal_timestep=dt_exec,
                                                             nperturbers=Nnn,)
     cluster_code.model_time = sun.age
