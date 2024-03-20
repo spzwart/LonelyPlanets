@@ -63,7 +63,7 @@ def restart_LonelyPlanets_stageII(restart_file,
     #dt_diag = 1.0 | units.Myr
     dt_exec = 0.01 | units.Myr
     dt_diag = 1.0 | units.Myr
-    cluster_code = PlanetarySystemIntegrationWithPerturbers(maximal_timestep=dt_diag,
+    cluster_code = PlanetarySystemIntegrationWithPerturbers(maximal_timestep=dt_exec,
                                                             nperturbers=Nnn,)
     cluster_code.model_time = sun.age
     cluster_code.restart_time = sun.age
