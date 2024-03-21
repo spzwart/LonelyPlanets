@@ -61,7 +61,7 @@ def restart_LonelyPlanets_stageII(restart_file,
     
     wct_initialization = wallclock.time()    
     dt_diag = 1.0 | units.Myr
-    dt_exec = 0.5*dt_diag
+    dt_exec = 0.01*dt_diag
     cluster_code = PlanetarySystemIntegrationWithPerturbers(maximal_timestep=dt_exec,
                                                             nperturbers=Nnn,)
     cluster_code.model_time = sun.age
@@ -81,7 +81,9 @@ def restart_LonelyPlanets_stageII(restart_file,
         cluster_code.start_stellar_code()
     cluster_code.start_gravity_code(integrator)
 
-    cluster_code.determine_orbital_parameters()
+    #cluster_code.determine_orbital_parameters()
+    cluster_code.get_orbital_elements_of_planetary_system()
+
     galaxy_code = MilkyWay_galaxy()
     
     gravity = bridge.Bridge(verbose=False, use_threading=False)
@@ -138,7 +140,9 @@ def integrate_planetary_system_LonelyPlanets(fperturbers, Nnn, Nasteroids,
         cluster_code.start_stellar_code()
     cluster_code.start_gravity_code(integrator)
 
-    cluster_code.determine_orbital_parameters()
+    #cluster_code.determine_orbital_parameters()
+    cluster.get_orbital_elements_of_planetary_system()
+    
 
     #galaxy_code = MilkyWay_galaxy(Mb=0*1.40592e10| units.MSun,
     #                              Md=0*8.5608e10| units.MSun,

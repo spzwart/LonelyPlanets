@@ -108,6 +108,7 @@ class PlanetarySystemIntegrationWithPerturbers(object):
             self.add_new_planetary_system(Nasteroids)
         else:
             self.add_existing_planetary_system(planetary_system)
+            #self.add_existing_planetary_system_from_orbits(planetary_system)
             
     def add_existing_planetary_system(self, planetary_system):
         
@@ -127,6 +128,74 @@ class PlanetarySystemIntegrationWithPerturbers(object):
         
         self.particles.add_particles(planetary_system)
         self.key = self.get_perturbed_particle().key
+        
+    def get_orbital_elements_of_planetary_system(self):
+        star = self.get_perturbed_particle()
+        planets = self.particles-star
+        p = Particles()
+        p.add_particle(star)
+        for pi in planets:
+            p.add_particle(pi)
+            kepler_elements = orbital_elements_from_binary(p, G=constants.G)
+            p.semimajor_axis = kepler_elements[2]
+            p.eccentric = kepler_elements[3]
+            p.inclination = kepler_elements[5]
+            p.remove_particle(pi)
+        """
+        from matplotlib import pyplot as plt
+        plt.scatter(planets.semimajor_axis.value_in(units.au),
+                    planets.eccentricity)
+        plt.show()
+        """
+
+        """
+        total_masses = planets.mass + star.mass
+        rel_pos = planets.position-star.position
+        rel_vel = planets.velocity-star.velocity
+        return get_orbital_elements_from_arrays(rel_pos,
+                                                rel_vel,
+                                                total_masses,
+                                                G=constants.G)
+        """
+        
+    def add_existing_planetary_system_from_orbits(self, planetary_system):
+
+        """
+        sun = planetary_system[planetary_system.name=="Sun"][0]
+        print("planetary system pos:", sun.position.in_(units.pc))
+        minor_bodies = planetary_system-sun
+        sma, ecc, true_anomaly, inc, long_asc_node, arg_peri = self.get_orbital_elements_of_planetary_system(sun, minor_bodies)
+
+        from amuse.ext.orbital_elements import new_binary_from_orbital_elements
+
+        bodies = Particles(0)
+        bodies.add_particle(sun)
+        for pi in range(len(minor_bodies)):
+            if sma[pi]>1.e+3|units.au:
+                print("Orbit:", sma[pi].value_in(units.au), ecc[pi])
+                b = new_binary_from_orbital_elements(sun.mass,
+                                                 minor_bodies[pi].mass,
+                                                 sma[pi],
+                                                 ecc[pi],
+                                                 true_anomaly[pi],
+                                                 inc[pi],
+                                                 long_asc_node[pi],
+                                                 arg_peri[pi],
+                                                 G=constants.G)
+                b.position -= b[0].position
+                b.velocity -= b[0].velocity
+                b.position += sun.position
+                b.velocity += sun.velocity
+                print("Particle: pos:", b[1].position.in_(units.pc))
+                print("          pos:", minor_bodies[pi].position.in_(units.pc))
+                bodies.add_particle(b[1])
+        
+        print("planetary system pos:", sun.position.in_(units.pc))
+        print("planetary system com:", bodies.center_of_mass().in_(units.pc))
+        
+        self.particles.add_particles(bodies)
+        self.key = self.get_perturbed_particle().key
+        """
 
     def add_new_planetary_system(self, Nasteroids):
 
@@ -181,6 +250,7 @@ class PlanetarySystemIntegrationWithPerturbers(object):
 
         self.key = self.get_perturbed_particle().key
 
+    """
     def determine_orbital_parameters(self):
         #parent_star = self.particles[self.particles.type=="star"]
         parent_star = self.particles[self.particles.name=="Sun"]
@@ -189,6 +259,7 @@ class PlanetarySystemIntegrationWithPerturbers(object):
         asteroids = minor_bodies-planets
         get_orbital_elements_of_planetary_system(parent_star, planets)
         #print(planets.semimajor_axis.in_(units.au))
+    """
         
     def print_status(self):
         stars = self.particles[self.particles.type=="star"]
@@ -282,6 +353,8 @@ class PlanetarySystemIntegrationWithPerturbers(object):
         #self.particles.radius = 1|units.au
         
         self.to_gravity.copy()
+
+        
         #print("R=", self.gravity_code.particles.radius.in_(units.au))
         #Subtract the restart time, because gravity cannot start
         #at any random moment in time
@@ -293,7 +366,10 @@ class PlanetarySystemIntegrationWithPerturbers(object):
             self.wct_gravity += (wallclock.time()-wct) | units.s
             self.flag_colliding_stars()
             self.from_gravity.copy()
+
+            self.get_orbital_elements_of_planetary_system()
         
+            
         if len(self.perturbers)>0:
             self.to_perturbers.copy()
         if self.perturber_list_index==0:
@@ -559,12 +635,14 @@ class PlanetarySystemIntegrationWithPerturbers(object):
     def remove_lost_planets(self):
 
         escapers = Particles()
+        self.get_orbital_elements_of_planetary_system()
         sun = self.particles[self.particles.name=="Sun"][0]
         panda = self.particles-sun
         asteroids = panda[panda.type=="asteroid"]
         planets = panda - asteroids
-        get_orbital_elements_of_planetary_system(sun, planets)
-        get_orbital_elements_of_planetary_system(sun, asteroids)
+        
+        #get_orbital_elements_of_planetary_system(sun, planets)
+        #get_orbital_elements_of_planetary_system(sun, asteroids)
 
         lost_planets = panda[panda.eccentricity>1]
         la = Particles()
@@ -784,10 +862,12 @@ def integrate_planetary_system(Nasteroids):
     planetary_system = generate_planetary_system(star.as_set(),
                                                  Nasteroids)
 
-    minor_bodies = planetary_system-star
+    #minor_bodies = planetary_system-star
+    #planets = minor_bodies[minor_bodies.type=="planet"]
+    #asteroids = minor_bodies-planets
+    self.get_orbital_elements_of_planetary_system()
+    #get_orbital_elements_of_planetary_system(star, planets)
     planets = minor_bodies[minor_bodies.type=="planet"]
-    asteroids = minor_bodies-planets
-    get_orbital_elements_of_planetary_system(star, planets)
     print(planets.semimajor_axis.in_(units.au))
 
     cluster_code = PlanetarySystemIntegrationWithPerturbers(planetary_system, Nnn)
