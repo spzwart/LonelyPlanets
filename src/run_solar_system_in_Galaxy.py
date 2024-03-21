@@ -645,6 +645,11 @@ class PlanetarySystemIntegrationWithPerturbers(object):
         #get_orbital_elements_of_planetary_system(sun, asteroids)
 
         lost_planets = panda[panda.eccentricity>1]
+        com = sun.position
+        lost_planets = lost_planets.select(lambda r:
+                                           (r-com).length()>1|units.pc,
+                                           ["position"])
+        print("Number of escapers N=", len(lost_planets))
         la = Particles()
         if len(lost_planets)>0:
             lost_planets.name = "escaper"
