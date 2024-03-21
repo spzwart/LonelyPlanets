@@ -61,7 +61,7 @@ def restart_LonelyPlanets_stageII(restart_file,
     
     wct_initialization = wallclock.time()    
     dt_diag = 1.0 | units.Myr
-    dt_exec = 0.01*dt_diag
+    dt_exec = 0.5*dt_diag
     #dt_exec = dt_diag
     cluster_code = PlanetarySystemIntegrationWithPerturbers(maximal_timestep=dt_exec,
                                                             nperturbers=Nnn,)
@@ -142,7 +142,7 @@ def integrate_planetary_system_LonelyPlanets(fperturbers, Nnn, Nasteroids,
     cluster_code.start_gravity_code(integrator)
 
     #cluster_code.determine_orbital_parameters()
-    cluster.get_orbital_elements_of_planetary_system()
+    cluster_code.get_orbital_elements_of_planetary_system()
     
 
     #galaxy_code = MilkyWay_galaxy(Mb=0*1.40592e10| units.MSun,
