@@ -353,7 +353,7 @@ if __name__ in ('__main__', '__plot__'):
         print(f"Identify named stars as Suns: N={len(suns)}")
     if len(suns)==0:
         s = bodies[bodies.mass>0.8|units.MSun]
-        s = suns[suns.mass<1.2|units.MSun]
+        s = s[s.mass<1.2|units.MSun]
         if o.NSuns>0:
             if len(s)<o.NSuns:
                 print("Too many suns requested in input snapshot.")
