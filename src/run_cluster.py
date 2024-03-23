@@ -345,23 +345,18 @@ if __name__ in ('__main__', '__plot__'):
 
     np.random.seed(31415)
     bodies = read_set_from_file(o.filename)
-    suns = Particles(0)
     if len(o.name)>0:
-        s = bodies[bodies.name==o.name]
-        if len(s)>0:
-            suns.add_particles(s)
+        suns = bodies[bodies.name==o.name]
         print(f"Identify named stars as Suns: N={len(suns)}")
     if len(suns)==0:
-        s = bodies[bodies.mass>0.8|units.MSun]
-        s = s[s.mass<1.2|units.MSun]
+        suns = bodies[bodies.mass>0.8|units.MSun]
+        suns = suns[suns.mass<1.2|units.MSun]
         if o.NSuns>0:
-            if len(s)<o.NSuns:
+            if len(suns)<o.NSuns:
                 print("Too many suns requested in input snapshot.")
                 exit(-1)
             else:
-                suns.add_particles(s.random_sample(o.NSuns))
-        else:
-            suns.add_particles(s)
+                suns = suns.random_sample(o.NSuns)
         print(f"Identify stars between 0.8 and 1.2 MSun as Suns: N={len(suns)}")
 
     print(np.mean(suns.mass.in_(units.MSun)).in_(units.MSun))
