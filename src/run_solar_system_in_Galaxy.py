@@ -132,15 +132,18 @@ class PlanetarySystemIntegrationWithPerturbers(object):
     def get_orbital_elements_of_planetary_system(self):
         star = self.get_perturbed_particle()
         planets = self.particles-star
+        get_orbital_elements_of_planetary_system(star, planets)
+        """
         p = Particles()
         p.add_particle(star)
         for pi in planets:
             p.add_particle(pi)
             kepler_elements = orbital_elements_from_binary(p, G=constants.G)
-            p.semimajor_axis = kepler_elements[2]
-            p.eccentric = kepler_elements[3]
-            p.inclination = kepler_elements[5]
+            pi.semimajor_axis = kepler_elements[2]
+            pi.eccentric = kepler_elements[3]
+            pi.inclination = kepler_elements[5]
             p.remove_particle(pi)
+        """
         """
         from matplotlib import pyplot as plt
         plt.scatter(planets.semimajor_axis.value_in(units.au),
