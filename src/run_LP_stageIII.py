@@ -20,7 +20,6 @@ from amuse.ext.protodisk import ProtoPlanetaryDisk
 from amuse.ic import make_planets_oligarch
 from amuse.ext import solarsystem 
 
-#from matplotlib import pyplot as plt
 import numpy as np
 import math
 
@@ -61,12 +60,9 @@ def run_stage_III(cluster_file_names,
 
     cluster_file_index = 0    
     cluster_particles = read_set_from_file(cluster_files[cluster_file_index], close_file=True)
-    #index = cluster_files[0].split("cluster_i")[1].split(".amuse")[0]
 
     #cluster_code = ph4(converter, number_of_workers=12)
     cluster_code = Huayno(converter)
-    #cluster_code = BHTree(converter, number_of_workers=12)
-    #cluster_code.parameters.timestep_parameter = 0.3
     cluster_code.particles.add_particles(cluster_particles)
 
     channel_from_gd = cluster_code.particles.new_channel_to(cluster_particles)
@@ -79,11 +75,8 @@ def run_stage_III(cluster_file_names,
     cluster_file_index += 1
     new_cluster_particles = read_set_from_file(cluster_files[cluster_file_index],close_file=True)
 
-    ###channel_to_cp = old_cluster_particles.particles.new_channel_to(cluster_particles)
-    
     t_diag = 0|units.Myr
     dt_diag = 1 | units.Myr
-    #for file in cluster_files[1:]:
     model_time = 0 | units.Myr
     dt = 0.01 |units.Myr
     while model_time < time_end:
@@ -91,6 +84,7 @@ def run_stage_III(cluster_file_names,
         while model_time<new_cluster_particles[0].age:
             escaping_particles = get_escapers_at_time(escaper_data,
                                                       model_time-dt)
+            #-2dt offset brings the escaper closer to the star?
             model_time += dt
             if len(escaping_particles)>0:
                 s = cluster_particles[cluster_particles.key==int(17472204436860659206)]
@@ -102,9 +96,6 @@ def run_stage_III(cluster_file_names,
                 print("Add escapers to cluster code.")
                 cluster_particles.add_particles(escaping_particles)
                 cluster_particles.synchronize_to(cluster_code.particles)
-                #cluster_code.particles.add_particles(escaping_particles)
-                #channel_to_ff = cluster_code.particles.new_channel_to(freefloaters)
-                #channel_from_ff = freefloaters.new_channel_to(cluster_code.particles)
             else:
                 print("No escapers added.")
 
@@ -141,9 +132,6 @@ def run_stage_III(cluster_file_names,
         new_cluster_particles.new_channel_to(cluster_particles).copy()
         new_cluster_particles = read_set_from_file(cluster_file,
                                                    close_file=True)
-        #channel_from_gd = cluster_code.particles.new_channel_to(cluster_particles)
-        #channel_to_gd = cluster_particles.new_channel_to(cluster_code.particles)
-                                                   
             
     gravity.stop()
 
