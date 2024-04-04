@@ -24,7 +24,7 @@ from amuse.ext import solarsystem
 import numpy as np
 import math
 
-from run_cluster import MilkyWay_galaxy
+from run_LP_stageI import MilkyWay_galaxy
 
 def get_escapers_at_time(escaper_data, model_time):
     escapers = Particles()
