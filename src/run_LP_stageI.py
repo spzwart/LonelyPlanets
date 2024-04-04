@@ -200,6 +200,7 @@ def find_escapers(bodies, model_time):
 def run_LonelyPlanets(bodies, 
                       time_end=10 | units.Myr,
                       dt=0.001|units.Myr,
+                      dt_diag= 1|units.Myr,
                       Nnn=3):
 
     suns = bodies[bodies.name=="Sun"]
@@ -256,7 +257,6 @@ def run_LonelyPlanets(bodies,
         write_perturbers_to_file(model_time, star, perturbers)
 
     t_diag = model_time
-    dt_diag = 1|units.Myr
     Nsn = 0
     while gravity.model_time<time_end:
 
@@ -335,6 +335,10 @@ def new_option_parser():
     result.add_option("--dt", unit=units.Myr,
                       dest="dt", type="float",default = 0.01|units.Myr,
                       help="time step [%default]")
+    result.add_option("--dt_diag", unit=units.Myr,
+                      dest="dt_diag",
+                      type="float",default = 1.0|units.Myr,
+                      help="diagnistics time step [%default]")
     result.add_option("-f", 
                       dest="filename", default = "initial_cluster.amuse",
                       help="input filename [%default]")
@@ -366,5 +370,6 @@ if __name__ in ('__main__', '__plot__'):
     run_LonelyPlanets(bodies,
                       o.t_end,
                       o.dt,
+                      o.dt_diag,
                       Nnn=o.Nnn)
 

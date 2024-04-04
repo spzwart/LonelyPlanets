@@ -31,7 +31,7 @@ from amuse.ext import solarsystem
 import numpy as np
 import math
 
-from run_cluster import MilkyWay_galaxy
+from run_LP_stageI import MilkyWay_galaxy
 from run_solar_system_in_Galaxy import PlanetarySystemIntegrationWithPerturbers
 
 def read_restart_file(restart_file, restart_time=-1|units.Myr):

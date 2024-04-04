@@ -38,15 +38,6 @@ def get_escapers_at_time(escaper_data, model_time):
     print("escapers:", escapers)
     return escapers
 
-def evolve_cluster_model(model_time, gravity):
-        
-        print("model time=", model_time.in_(units.Myr))
-
-        gravity.evolve_model(model_time)
-            
-        dt = gravity.model_time-model_time
-        if dt<0|units.Myr:
-            return
         
 def run_stage_III(cluster_file_names,
                   escaper_file_names,
@@ -76,68 +67,65 @@ def run_stage_III(cluster_file_names,
     cluster_code = Huayno(converter)
     #cluster_code = BHTree(converter, number_of_workers=12)
     #cluster_code.parameters.timestep_parameter = 0.3
-    #cluster_code = BHTree(converter)
     cluster_code.particles.add_particles(cluster_particles)
+
     channel_from_gd = cluster_code.particles.new_channel_to(cluster_particles)
     channel_to_gd = cluster_particles.new_channel_to(cluster_code.particles)
-
-    freefloaters = Particles(0)
-    #Yes, I know, we are adding an empty particle set to the code.
-    cluster_code.particles.add_particles(freefloaters)
-    channel_to_ff = cluster_code.particles.new_channel_to(freefloaters)
-    channel_from_ff = freefloaters.new_channel_to(cluster_code.particles)
     
     gravity = bridge.Bridge(verbose=False, use_threading=False)
     gravity.add_system(cluster_code, (galaxy_code,))
     gravity.timestep=0.01|units.Myr
 
     cluster_file_index += 1
-    old_cluster_particles = cluster_particles
     new_cluster_particles = read_set_from_file(cluster_files[cluster_file_index],close_file=True)
+
+    ###channel_to_cp = old_cluster_particles.particles.new_channel_to(cluster_particles)
+    
     t_diag = 0|units.Myr
     dt_diag = 1 | units.Myr
     #for file in cluster_files[1:]:
     model_time = 0 | units.Myr
     dt = 0.01 |units.Myr
     while model_time < time_end:
+        print("-model time=", model_time.in_(units.Myr), cluster_particles[0].age.in_(units.Myr), new_cluster_particles[0].age.in_(units.Myr))
         while model_time<new_cluster_particles[0].age:
             escaping_particles = get_escapers_at_time(escaper_data,
-                                                      model_time)
+                                                      model_time-dt)
             model_time += dt
             if len(escaping_particles)>0:
                 s = cluster_particles[cluster_particles.key==int(17472204436860659206)]
-                print("model time=", model_time.in_(units.Myr), s.age.in_(units.Myr), escaping_particles.age.in_(units.Myr))
+                print("model time=", model_time.in_(units.Myr), s.age.in_(units.Myr), escaping_particles.age.in_(units.Myr), cluster_particles[0].age.in_(units.Myr), new_cluster_particles[0].age.in_(units.Myr))
                 print("Host star:", s)
                 print("Host star pos:", s.position.in_(units.pc))
                 print("escapers pos:", escaping_particles.position.in_(units.pc))
 
                 print("Add escapers to cluster code.")
-                freefloaters.add_particles(escaping_particles)
                 cluster_particles.add_particles(escaping_particles)
-                cluster_code.particles.add_particles(escaping_particles)
-                channel_to_ff = cluster_code.particles.new_channel_to(freefloaters)
-                channel_from_ff = freefloaters.new_channel_to(cluster_code.particles)
+                cluster_particles.synchronize_to(cluster_code.particles)
+                #cluster_code.particles.add_particles(escaping_particles)
+                #channel_to_ff = cluster_code.particles.new_channel_to(freefloaters)
+                #channel_from_ff = freefloaters.new_channel_to(cluster_code.particles)
             else:
                 print("No escapers added.")
 
             E0 = cluster_code.kinetic_energy + cluster_code.potential_energy
-            evolve_cluster_model(model_time, gravity)
+            print("model time=", model_time.in_(units.Myr))
+            gravity.evolve_model(model_time)
             channel_from_gd.copy()
             cluster_particles.age = model_time
+            print("pos=", cluster_particles[0].position.in_(units.pc))
             
             N = len(cluster_code.particles)
             print(f"Evolve to time = {(model_time+dt).in_(units.Myr)}, N={N}")
-            sys.stdout.flush()
-
             
             E1 = cluster_code.kinetic_energy + cluster_code.potential_energy
             dE = E0-E1
             ddE = (E0-E1)/E0
-            channel_from_gd.copy() 
-            channel_from_ff.copy() 
 
             print("At time=", model_time.in_(units.Myr), "dE", dE, ddE)
+            sys.stdout.flush()
 
+        print("check for new cluster model file. at t=", model_time.in_(units.Myr))
         fcluster = "freefloaters_i{0:06}.amuse".format(cluster_file_index)
         write_set_to_file(cluster_particles,
                           fcluster,
@@ -148,13 +136,13 @@ def run_stage_III(cluster_file_names,
             print("End of cluster file reached")
             break
         cluster_file = cluster_files[cluster_file_index]
-        old_cluster_particles = new_cluster_particles
+        print("pos check:", cluster_particles[0].x.in_(units.pc))
+        print("pos check:", new_cluster_particles[0].x.in_(units.pc))
+        new_cluster_particles.new_channel_to(cluster_particles).copy()
         new_cluster_particles = read_set_from_file(cluster_file,
                                                    close_file=True)
-        cluster_code.particles.remove_particles(old_cluster_particles)
-        cluster_code.particles.add_particles(new_cluster_particles)
-        channel_from_gd = cluster_code.particles.new_channel_to(new_cluster_particles)
-        channel_to_gd = new_cluster_particles.new_channel_to(cluster_code.particles)
+        #channel_from_gd = cluster_code.particles.new_channel_to(cluster_particles)
+        #channel_to_gd = cluster_particles.new_channel_to(cluster_code.particles)
                                                    
             
     gravity.stop()
