@@ -49,7 +49,7 @@ Log output filename: <log-outputfilename>
 for example: cluster_S1.log
 
 Run the code via
-  %> python <LonelyPlanets source directory>run_cluster.py -f <input snapshot amuse file>  --Nnn 6 -t 1000 >& <log-outputfilename>
+  %> python <LonelyPlanets source directory>run_LonelyPlanets_S1.py -f <input snapshot amuse file>  --Nnn 6 -t 1000 >& <log-outputfilename>
 
 runs the script with 6 nearest neighbors for 1000Myr
 
@@ -59,7 +59,7 @@ In your production environment, generate the stage 2 directory
   %> mkdir S2
 
 and run the script
-  %> python <LonelyPlanets source directory>run_stageII_with_Galaxy.py --Nast 1000 -t 1000 -f <input S1 file>& <log-outputfilename>
+  %> python <LonelyPlanets source directory>run_LonelyPlanets_S2.py --Nast 1000 -t 1000 -f <input S1 file>& <log-outputfilename>
 
 You can only run after Stage 1, and with the star that was followed
 identified. This file is located in your S1 directory.  The 
