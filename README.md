@@ -68,4 +68,23 @@ for example: ../S1/lps_key_9974767140939965756.amuse
 Log output filename: <log-outputfilename>
 for example: cluster_S2_key_9974767140939965756.log
 
+# Processing Data
+Data for a specific star (identified by its key) is store three files:
+lp_planets_key_<key>.amuse
+and 
+lp_escapers_key_<key>.amuse
+Here <key> identifies the star, as before.
 
+In our example these will be the following files:
+lp_planets_key_9974767140939965756.amuse
+and 
+lp_escapers_key_9974767140939965756.amuse
+
+The file: lp_planets_key_<key>.amuse contains snapshots of the
+planetary system at the designated output diagnostic times.
+
+The file: lp_escapers_key_<key>.amuse contains individual objects at
+the moment they escaped and left the system (in this example case the
+planetsesimals or planets the got unbound from the parent star <key>).
+
+These data may be further analyzed.
