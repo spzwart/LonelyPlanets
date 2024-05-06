@@ -1,0 +1,138 @@
+Copyright 2023 Apache License (Version 2.0, January 2004)
+
+This file is part of the LonelyPlanets project.
+
+
+                      Installing LonelyPlanets
+                      ========================
+
+Note: In case of problem, please read this INSTALL file carefully before
+reporting a bug, in particular Section "In case of problem" below. Some
+problems are due to bad configuration on the user side (not specific to
+LonelyPlanets).
+
+LonelyPlanets is a subpackage of the Astronomical Multipurpose
+Software Environment (AMUSE, 2018araa.book.....P), and this package
+needs to be installed.  After installing AMUSE, generate a working
+directory in which the source for LonelyPlanets is installed.
+
+You will need at least one direct N-body code or Tree-code for
+LonelyPlanets to operate. The current implementation uses ph4
+(2022A&A...659A..86P), which is hardcoded in the script.
+
+You will need at a Henyey or parametrized stellar evolution code for
+LonelyPlanets to operate. The current implementation uses SeBa
+(1996A&A...309..179P), which is hardcoded in the script.
+
+For LINUX-based workstations and LINUX-based supercomputers.
+
+0) Install MSUE
+   AMUSE source can be downloaded from github:
+   https://github.com/amusecode/amuse
+   for the manual or other tutorial information see the project page:
+   https://www.amusecode.org/
+
+1) Here follows a short instruction on how to install AMUSE
+
+ 1a) On a supercomputer, be sure to load the mpi-x84 module
+ 
+   %> module load mpi-x84
+
+ 1b) Create a conda environment
+ 
+   %> conda create -n amuse
+   %> conda activate amuse
+
+ 1c) make an AMUSE source-code directory 
+   %> mkdir amuse
+   %> cd amuse
+
+ 1d) clone the AMUSE project software
+   %> git clone https://github.com/amusecode/amuse.git .
+
+ 1e) install conda prerequisite packages
+   %> conda install python
+   %> conda install numpy
+   %> conda install scipy
+   %> conda install h5py
+   %> conda install pytest
+   %> conda install docutils
+   %> conda install mpfr
+
+   you may want to install openmp also but there seem to be some issues
+   with multiprocessing on smaller machines.
+   %> conda install openmp
+
+  1f) configure and build AMUSE
+   %> ./configure --prefix=$CONDA_PREFIX
+   %> make DOWNLOAD_CODES=1
+
+  Once doing this, you may get the following message:
+  ## 4 out of 55 codes built, 4 out of 6 libraries built
+  # * asterisk
+  # * gadget2
+  # * galactics
+  # * mameclot
+
+  1f) pip package you AMUSE repository
+   %> pip install -e .
+   %> python setup.py develop_build
+
+For Mac OS X machines, read the amuse project-page instructions.
+For any other operating system, install a decent operating system first before starting to install AMUSE.
+
+./configure options
+===================
+
+Usage: {amuse}/configure [OPTION]... [VAR=VALUE]...
+
+  --disable-option-checking  ignore unrecognized 
+  --disable-FEATURE       do not include FEATURE 
+  
+  --enable-FEATURE[=ARG]  include FEATURE [ARG=yes]
+  --enable-mpi            Enable MPI support for communicating with codes,			  by default enabled
+  --enable-openmp         Turn off OpenMP support, even if it is
+  			  available in
+                          the compilers
+  --enable-cuda           Enable CUDA for codes
+  --enable-sapporo2       Use the provided sapporo library version 2,
+  			  instead
+                          of sapporo_light
+  --disable-pic           compile PIC objects [default=enabled for shared
+                          builds on supported platforms]
+  --disable-gsltest       Do not try to compile and run a test GSL program
+
+Optional Packages:
+  --with-PACKAGE[=ARG]    use PACKAGE [ARG=yes]
+  --without-PACKAGE       do not use PACKAGE (same as --with-PACKAGE=no)
+  --with-python-sys-prefix
+                          use Python's sys.prefix and sys.exec_prefix
+			  values
+  --with-python_prefix    override the default PYTHON_PREFIX
+  --with-python_exec_prefix
+                          override the default PYTHON_EXEC_PREFIX
+   --with-cuda-libdir=PFX Directory where libcuda.so is installed
+   			  (optional)
+  --with-opencl=PFX       Prefix where OpenCl has been installed
+  --with-sapporo          Use sapporo library in given directory
+  --with-blas=<lib>       use BLAS library <lib>
+  --with-lapack=<lib>     use LAPACK library <lib>
+  --with-fftw=PFX         Prefix where FFTW has been installed
+  --with-gmp=PFX          Prefix where GMP has been installed
+  --with-mpfr=PFX         Prefix where MPFR has been installed
+  --with-hdf5=yes/no/PATH location of h5cc or h5pcc for HDF5 configuration
+  --with-netcdf4=yes/no/PATH
+                          base directory of NetCDF4 installation
+  --with-gsl-prefix=PFX   Prefix where GSL is installed (optional)
+  --with-gsl-exec-prefix=PFX Exec prefix where GSL is installed (optional)
+
+
+References:
+AMUSE: DOI:10.5281/zenodo.1435860
+AMUSE: ADS:2018araa.book.....P (Portegies Zwart, S. & McMillan, S.L.W., 2018)
+AMUSE: ADS:2013CoPhC.183..456P (Portegies Zwart, S. et al., 2013)
+AMUSE: ADS:2013A&A...557A..84P (Pelupessy, F. I. et al., 2013)
+AMUSE: ADS:2009NewA...14..369P (Portegies Zwart, S. et al., 2009)
+PH4: 2022A&A...659A..86P
+SeBa: 1996A&A...309..179P
+LonelyPlanets: 2019MNRAS.489.4311C
