@@ -321,7 +321,7 @@ def run_LonelyPlanets(bodies,
 def new_option_parser():
     from amuse.units.optparse import OptionParser
     result = OptionParser()
-    result.add_option("--Nnn", dest="Nnn", type="int",default = 4,
+    result.add_option("--Nnn", dest="Nnn", type="int",default = 6,
                       help="number of nearest neighbors [%default]")
     result.add_option("--NSuns", 
                       dest="NSuns", type="int",default = 1,

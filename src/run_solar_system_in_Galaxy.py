@@ -22,7 +22,7 @@ from amuse.ext import solarsystem
 import numpy as np
 import math
 
-from run_LP_stageI import MilkyWay_galaxy
+from run_LonelyPlanets_S1 import MilkyWay_galaxy
 from make_initial_cluster import ZAMS_radius
 class ConstantParameters:
     __slots__ = ()
