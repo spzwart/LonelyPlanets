@@ -361,7 +361,7 @@ if __name__ in ('__main__', '__plot__'):
                 exit(-1)
             else:
                 suns = suns.random_sample(o.NSuns)
-        print(f"Identify stars between 0.8 and 1.2 MSun as Suns: N={len(suns)}")
+        print(f"Identify stars between {suns.mass.min().in_(units.MSun)} and {suns.mass.max().in_(units.MSun)} MSun as Suns: N={len(suns)}")
 
     print(np.mean(suns.mass.in_(units.MSun)).in_(units.MSun))
     suns.mass = 1|units.MSun
