@@ -31,7 +31,7 @@ from amuse.ext import solarsystem
 import numpy as np
 import math
 
-from run_LP_stageI import MilkyWay_galaxy
+from run_LonelyPlanets_S1 import MilkyWay_galaxy
 from run_solar_system_in_Galaxy import PlanetarySystemIntegrationWithPerturbers
 
 def read_restart_file(restart_file, restart_time=-1|units.Myr):
@@ -197,7 +197,7 @@ def new_option_parser():
                       type="int",default = 1000,
                       help="number of asteroids [%default]")
     result.add_option("--seed", dest="seed",
-                      type="int",default = 12345,
+                      type="int",default = -1,
                       help="random number seed [%default]")
     result.add_option("-I", dest="integrator",
                       type="int", default = 8,
