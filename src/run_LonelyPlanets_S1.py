@@ -201,7 +201,8 @@ def run_LonelyPlanets(bodies,
                       time_end=10 | units.Myr,
                       dt=0.001|units.Myr,
                       dt_diag= 1|units.Myr,
-                      Nnn=3):
+                      Nnn=3,
+                      epsilon=100|units.au):
 
     suns = bodies[bodies.name=="Sun"]
     print("N=", len(bodies), len(suns))
@@ -236,7 +237,7 @@ def run_LonelyPlanets(bodies,
     #cluster_code = ph4(converter)
     #cluster_code = Petar(converter, number_of_workers=12)
     print(cluster_code.parameters)
-    #cluster_code.parameters.epsilon_squared = (100|units.au)**2
+    cluster_code.parameters.epsilon_squared = (epsilon)**2
     #cluster_code.parameters.timestep_parameter = 0.03
     cluster_code.particles.add_particles(bodies)
     energy_tot_init = cluster_code.kinetic_energy + cluster_code.potential_energy
@@ -332,6 +333,9 @@ def new_option_parser():
     result.add_option("-t", unit=units.Myr,
                       dest="t_end", type="float",default = 1|units.Myr,
                       help="end time [%default]")
+    result.add_option("--epsilon", unit=units.au,
+                      dest="eps", type="float",default = 0|units.au,
+                      help="softening parameter (epsilon) [%default]")
     result.add_option("--dt", unit=units.Myr,
                       dest="dt", type="float",default = 0.01|units.Myr,
                       help="time step [%default]")
@@ -371,5 +375,6 @@ if __name__ in ('__main__', '__plot__'):
                       o.t_end,
                       o.dt,
                       o.dt_diag,
-                      Nnn=o.Nnn)
+                      Nnn=o.Nnn,
+                      epsilon=o.eps)
 
