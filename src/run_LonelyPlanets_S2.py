@@ -64,7 +64,7 @@ def restart_LonelyPlanets_stageII(restart_file,
     dt_exec = 0.5*dt_diag
     #dt_exec = dt_diag
     cluster_code = PlanetarySystemIntegrationWithPerturbers(maximal_timestep=dt_exec,
-                                                            nperturbers=Nnn,)
+                                                            nperturbers=Nnn)
     cluster_code.model_time = sun.age
     cluster_code.restart_time = sun.age
 
@@ -127,14 +127,23 @@ def restart_LonelyPlanets_stageII(restart_file,
     cluster_code.print_wallclock_time()
 
 def integrate_planetary_system_LonelyPlanets(fperturbers, Nnn, Nasteroids,
-                                             time_end, integrator):
+                                             time_end, integrator,
+                                             rotation_vector=None):
 
     wct_initialization = wallclock.time()    
     dt_diag = 1.0 | units.Myr
     cluster_code = PlanetarySystemIntegrationWithPerturbers(nperturbers=Nnn,
                                                             maximal_timestep=dt_diag)
     cluster_code.read_perturber_list(fperturbers)
-    cluster_code.add_planetary_system(Nasteroids=Nasteroids)
+    sun = cluster_code.get_perturbed_particle()
+    try:
+        r_max = sun.disk_radius
+    except:
+        r_max = 100|units.au
+    print("Maximum disk radius r_max=", r_max.in_(units.au))
+    cluster_code.add_planetary_system(Nasteroids=Nasteroids,
+                                      rotation_vector=rotation_vector,
+                                      r_max=r_max)
 
     include_stellar_evolution = False
     if include_stellar_evolution:
@@ -220,6 +229,15 @@ def new_option_parser():
                       type="float",
                       default = 1|units.Myr,
                       help="Simulation end time [%default]")
+    result.add_option("--phi", dest="phi",
+                      type="float",default = 0,
+                      help="rotaiton around x-axis [%default]")
+    result.add_option("--theta", dest="theta",
+                      type="float",default = 60.2,
+                      help="rotaiton around y-axis [%default]")
+    result.add_option("--psi", dest="psi",
+                      type="float",default = 0,
+                      help="rotaiton around z-axis [%default]")
     return result
     
 if __name__ in ('__main__', '__plot__'):
@@ -228,12 +246,18 @@ if __name__ in ('__main__', '__plot__'):
     if o.seed>0:
         np.random.seed(o.seed)
 
+    rotation_vector = {}
+    rotation_vector['phi'] = o.phi #| units.deg
+    rotation_vector['theta'] = o.theta# | units.deg #Sun's angle in the Galactic disk
+    rotation_vector['psi'] = o.psi#| units.deg
+        
     if len(o.restart_file) == 0:
         integrate_planetary_system_LonelyPlanets(o.fperturbers,
                                                  o.Nnn,
                                                  o.Nasteroids,
                                                  o.time_end,
-                                                 o.integrator)
+                                                 o.integrator,
+                                                 rotation_vector)
     else:
         print(f"Restart from {o.restart_file} at t= {o.restart_time}")
         restart_LonelyPlanets_stageII(o.restart_file,

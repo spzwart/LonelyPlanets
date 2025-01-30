@@ -114,7 +114,7 @@ def plot_particles(bodies, alpha=1, ax=plt):
                     vmin=-1, vmax=2)
     return ec
 
-def plot_cluster(bodies, orbit, index, savefig=True):
+def plot_cluster(bodies, orbit, index, axis_limit=100, savefig=True):
 
     fig, ax1 = plt.subplots(1) 
         
@@ -214,9 +214,8 @@ def plot_cluster(bodies, orbit, index, savefig=True):
     #            sun[0].y.value_in(units.pc), c='yellow',
     #            marker="s", s=100, lw=1,
     #            edgecolors='k', facecolor='k')
-    lim = 100
-    ax1.set_xlim(-lim, lim)
-    ax1.set_ylim(-lim, lim)
+    ax1.set_xlim(-axis_limit, axis_limit)
+    ax1.set_ylim(-axis_limit, axis_limit)
     ax1.set_aspect('equal')
 
     if savefig:
@@ -232,6 +231,9 @@ def new_option_parser():
     result.add_option("-f", 
                       dest="fcluster", default = "",
                       help="input filename [%default]")
+    result.add_option("--lim", type="float",
+                      dest="axis_limit", default = 100,
+                      help="plot axis limit [%default]")
     return result
     
 if __name__ in ('__main__', '__plot__'):
@@ -242,7 +244,7 @@ if __name__ in ('__main__', '__plot__'):
         index = int(file.split("_i")[1].split(".amuse")[0])
         bodies = read_set_from_file(file, close_file=True)
         orbit = []
-        plot_cluster(bodies.copy(), orbit, index, savefig=False)
+        plot_cluster(bodies.copy(), orbit, index, o.axis_limit, savefig=False)
     else:
         from glob import glob
         files = glob("cluster_i*.amuse")
@@ -253,4 +255,4 @@ if __name__ in ('__main__', '__plot__'):
             index = int(file.split("cluster_i")[1].split(".amuse")[0])
             bodies = read_set_from_file(file, close_file=True)
             orbit.append(bodies.center_of_mass().value_in(units.pc))
-            plot_cluster(bodies.copy(), orbit, index)
+            plot_cluster(bodies.copy(), orbit, index, o.axis_limit)

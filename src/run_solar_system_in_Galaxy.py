@@ -103,9 +103,11 @@ class PlanetarySystemIntegrationWithPerturbers(object):
         
     def add_planetary_system(self,
                              planetary_system=None,
-                             Nasteroids=0):
+                             Nasteroids=0,
+                             rotation_vector=None,
+                             r_max=100|units.au):
         if planetary_system==None:
-            self.add_new_planetary_system(Nasteroids)
+            self.add_new_planetary_system(Nasteroids, rotation_vector, r_max)
         else:
             self.add_existing_planetary_system(planetary_system)
             #self.add_existing_planetary_system_from_orbits(planetary_system)
@@ -200,7 +202,7 @@ class PlanetarySystemIntegrationWithPerturbers(object):
         self.key = self.get_perturbed_particle().key
         """
 
-    def add_new_planetary_system(self, Nasteroids):
+    def add_new_planetary_system(self, Nasteroids, rotation_vector, r_max=100|units.au):
 
         parent_star = Particles()
         if len(self.particles)>0:
@@ -224,9 +226,10 @@ class PlanetarySystemIntegrationWithPerturbers(object):
 
         if self.minimal_number_of_planets<=len(planets):
             self.minimal_number_of_planets = len(planets)-self.minimal_number_of_planets
-        converter=nbody_system.nbody_to_si(parent_star.mass.sum(), 1|units.au)
+        r_min = 1|units.au
+        converter=nbody_system.nbody_to_si(parent_star.mass.sum(), r_min)
         asteroids = ProtoPlanetaryDisk(Nasteroids,
-                                       densitypower=1.5, Rmin=1, Rmax=100,
+                                       densitypower=1.5, Rmin=1, Rmax=r_max/r_min,
                                        q_out=1, discfraction=0.01,
                                        convert_nbody=converter).result
         asteroids.mass = 0 | units.MEarth
@@ -851,7 +854,7 @@ def write_planetary_system(model_time, planetary_system):
     print("File written:", filename, "N_planets=", len(planetary_system))
 
 
-def integrate_planetary_system(Nasteroids):
+def integrate_planetary_system(Nasteroids, rotation_vector):
 
     wct_initialization = wallclock.time()
     galaxy_code = MilkyWay_galaxy()
@@ -868,7 +871,7 @@ def integrate_planetary_system(Nasteroids):
     star.vy = 1.0*galaxy_code.circular_velocity(Rinit)
     
     planetary_system = generate_planetary_system(star.as_set(),
-                                                 Nasteroids)
+                                                 Nasteroids, rotation_vector)
 
     #minor_bodies = planetary_system-star
     #planets = minor_bodies[minor_bodies.type=="planet"]
@@ -914,7 +917,7 @@ def integrate_planetary_system(Nasteroids):
     gravity.stop()
     cluster_code.print_wallclock_time()
     
-def generate_planetary_system(parent_star, Nasteroids):
+def generate_planetary_system(parent_star, Nasteroids, rotation_vector):
 
     planetary_system = new_solar_system()
     sun = planetary_system[planetary_system.name=="SUN"][0]
@@ -938,13 +941,20 @@ def generate_planetary_system(parent_star, Nasteroids):
     asteroids.type = "asteroid"
 
     # rotate planetary system
+    phi = np.deg2rad(rotation_vector['psi'])
+    theta = np.deg2rad(rotation_vector['theta'])
+    psi = np.deg2rad(rotation_vector['psi'])
+    planets.rotate(phi, theta, psi)
+    asteroids.rotate(phi, theta, psi)
+    """
     from rotate import rotate_particle_set
     phi = 90 | units.deg
     #theta = 60.2 | units.deg
     theta = 0 | units.deg
-    chi = 0 | units.deg
-    rotate_particle_set(planets, phi, theta, chi)
-    rotate_particle_set(asteroids, phi, theta, chi)
+    psi = 0 | units.deg
+    rotate_particle_set(planets, phi, theta, psi)
+    rotate_particle_set(asteroids, phi, theta, psi)
+    """
 
     #translate planetary system
     planets.position += parent_star.position
@@ -967,5 +977,9 @@ if __name__ in ('__main__', '__plot__'):
     o, arguments  = new_option_parser().parse_args()
 
     np.random.seed(31415)
-    integrate_planetary_system(o.Nasteroids)
+    rotation_vector = {}
+    rotation_vector['phi'] = 0 #| units.deg
+    rotation_vector['theta'] = 60.2# | units.deg #Sun's angle in the Galactic disk
+    rotation_vector['psi'] = 0#| units.deg
+    integrate_planetary_system(o.Nasteroids, rotation_vector)
     
