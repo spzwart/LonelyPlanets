@@ -36,8 +36,11 @@ from run_solar_system_in_Galaxy import PlanetarySystemIntegrationWithPerturbers
 
 def read_restart_file(restart_file, restart_time=-1|units.Myr):
     panda=read_set_from_file(restart_file, close_file=True)
+    
     if restart_time<0|units.Myr:
         final_snapshot = list(panda.iter_history())[0]
+        if not hasattr(final_snapshot, "age"):
+            final_snapshot.age = 0 | units.Myr
     else:
         for pi in reversed(list(panda.iter_history())):
             print("Restart at time=", pi[0].age.in_(units.Myr),
@@ -128,6 +131,7 @@ def restart_LonelyPlanets_stageII(restart_file,
 
 def integrate_planetary_system_LonelyPlanets(fperturbers, Nnn, Nasteroids,
                                              time_end, integrator,
+                                             planetary_system = None,
                                              rotation_vector=None):
 
     wct_initialization = wallclock.time()    
@@ -141,10 +145,29 @@ def integrate_planetary_system_LonelyPlanets(fperturbers, Nnn, Nasteroids,
     except:
         r_max = 100|units.au
     print("Maximum disk radius r_max=", r_max.in_(units.au))
-    cluster_code.add_planetary_system(Nasteroids=Nasteroids,
+    if planetary_system != None:
+        star = planetary_system[planetary_system.name=="Sun"][0]
+        planets = planetary_system[planetary_system.type=="planet"]
+        planetary_system.position -= star.position
+        planetary_system.velocity -= star.velocity
+
+        planets, asteroids = cluster_code.add_planetesimal_disk_to_planetary_system(sun, planets,
+                                                                                    Nasteroids,
+                                                                                    rotation_vector, r_max)
+        
+        planetary_system.remove_particle(star)
+        planetary_system.add_particle(sun)
+        planetary_system.add_particles(asteroids)
+        sun.key = star.key
+        #planetary_system.position += sun.position
+        #planetary_system.velocity += sun.velocity
+
+    cluster_code.add_planetary_system(planetary_system=planetary_system,
+                                      Nasteroids=Nasteroids,
                                       rotation_vector=rotation_vector,
                                       r_max=r_max)
-
+    #cluster_code.plot_system()
+    
     include_stellar_evolution = False
     if include_stellar_evolution:
         cluster_code.start_stellar_code()
@@ -223,6 +246,10 @@ def new_option_parser():
                       #default = "lps_key_13544424148568912489.amuse",
                       default = "",
                       help="stellar input filename [%default]")
+    result.add_option("--input_planetarysystem_filename", 
+                      dest="planetarysystem_filename",
+                      default = "",
+                      help="input planetary system filename [%default]")
     result.add_option("-t", 
                       dest="time_end",
                       unit=units.Myr,
@@ -250,13 +277,17 @@ if __name__ in ('__main__', '__plot__'):
     rotation_vector['phi'] = o.phi #| units.deg
     rotation_vector['theta'] = o.theta# | units.deg #Sun's angle in the Galactic disk
     rotation_vector['psi'] = o.psi#| units.deg
-        
+
+    planetary_system = None
+    if len(o.planetarysystem_filename)>0:
+        planetary_system = read_set_from_file(o.planetarysystem_filename, close_file=True)
     if len(o.restart_file) == 0:
         integrate_planetary_system_LonelyPlanets(o.fperturbers,
                                                  o.Nnn,
                                                  o.Nasteroids,
                                                  o.time_end,
                                                  o.integrator,
+                                                 planetary_system,
                                                  rotation_vector)
     else:
         print(f"Restart from {o.restart_file} at t= {o.restart_time}")

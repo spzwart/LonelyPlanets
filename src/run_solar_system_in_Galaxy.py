@@ -63,6 +63,23 @@ class PlanetarySystemIntegrationWithPerturbers(object):
         self.converter=nbody_system.nbody_to_si(1|units.MSun,
                                                 1000|units.au)
 
+    def plot_system(self):
+        from matplotlib import pyplot as plt
+        if len(self.particles)>0:
+            plt.scatter(self.particles.x.value_in(units.pc),
+                        self.particles.y.value_in(units.pc), s=1,c='k')
+        planets = self.particles[self.particles.type=="planet"]
+        if len(planets)>0:
+            plt.scatter(planets.x.value_in(units.pc),
+                        planets.y.value_in(units.pc), c='b')
+        perturbed_star = self.particles[self.particles.key==self.key]
+        if len(perturbed_star)>0:
+            plt.scatter(perturbed_star.x.value_in(units.pc),
+                        perturbed_star.y.value_in(units.pc), s=200, c='y')
+        if len(self.perturbers)>0:
+            plt.scatter(self.perturbers.x.value_in(units.pc),
+                        self.perturbers.y.value_in(units.pc), c='r')
+        plt.show()
 
     #@property
     #def current_time(self):
@@ -80,6 +97,7 @@ class PlanetarySystemIntegrationWithPerturbers(object):
         if len(perturbed_particle)==1:
             return perturbed_particle[0]
         else:
+            print(perturbed_particle)
             print("No or too many perturbed particle(s)")
             print("Stop")
             exit(-1)
@@ -116,9 +134,12 @@ class PlanetarySystemIntegrationWithPerturbers(object):
         
         #planetary_system.move_to_center()
         sun = planetary_system[planetary_system.name=="Sun"]
+        print(sun)
         #star_from_perturber_list = self.particles[self.particles.name=="Sun"][0]
 
-        print("planetary system pos:", sun.position.in_(units.pc))
+        if len(sun)>0:
+            print("planetary system pos:", sun.position.in_(units.pc))
+            planetary_system.remove_particle(sun)
         #print("Sun from perturber list pos:", star_from_perturber_list.position.in_(units.pc))
         # move planetary system to perturber-list star
         #planetary_system.position += sun.position
@@ -213,6 +234,8 @@ class PlanetarySystemIntegrationWithPerturbers(object):
             parent_star.add_particle(sun)
             self.particles.add_particles(parent_star)
 
+        #parent_star.name = "Sun"
+        #parent_star.type = "star"
         planetary_system = new_solar_system()
         sun = planetary_system[planetary_system.name=="SUN"][0]
         #parent_star.mass = sun.mass
@@ -223,6 +246,17 @@ class PlanetarySystemIntegrationWithPerturbers(object):
         planets = planetary_system[4:] # includes Earth and up
         planets = planets[:-1]
         planets.type = "planet"
+
+        planets, asteroids = self.add_planetesimal_disk_to_planetary_system(parent_star, planets,
+                                                                       Nasteroids, rotation_vector, r_max)
+
+        self.particles.add_particles(planets)
+        self.particles.add_particles(asteroids)
+
+        self.key = self.get_perturbed_particle().key
+        
+    def add_planetesimal_disk_to_planetary_system(self, parent_star, planets,
+                                                  Nasteroids, rotation_vector, r_max):
 
         if self.minimal_number_of_planets<=len(planets):
             self.minimal_number_of_planets = len(planets)-self.minimal_number_of_planets
@@ -250,11 +284,7 @@ class PlanetarySystemIntegrationWithPerturbers(object):
         planets.velocity += parent_star.velocity
         asteroids.position += parent_star.position
         asteroids.velocity += parent_star.velocity
-    
-        self.particles.add_particles(planets)
-        self.particles.add_particles(asteroids)
-
-        self.key = self.get_perturbed_particle().key
+        return planets, asteroids
 
     """
     def determine_orbital_parameters(self):
@@ -368,6 +398,10 @@ class PlanetarySystemIntegrationWithPerturbers(object):
         while self.gravity_code.model_time<time_next-(1|units.yr):
             #print("time=", self.gravity_code.model_time.in_(units.Myr)-time_next.in_(units.Myr), self.gravity_code.model_time.in_(units.Myr)-self.model_time.in_(units.Myr))
             wct = wallclock.time()
+
+            self.plot_system()
+        
+            
             self.gravity_code.evolve_model(time_next)
             self.wct_gravity += (wallclock.time()-wct) | units.s
             self.flag_colliding_stars()
