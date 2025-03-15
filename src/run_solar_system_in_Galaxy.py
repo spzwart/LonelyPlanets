@@ -399,9 +399,6 @@ class PlanetarySystemIntegrationWithPerturbers(object):
             #print("time=", self.gravity_code.model_time.in_(units.Myr)-time_next.in_(units.Myr), self.gravity_code.model_time.in_(units.Myr)-self.model_time.in_(units.Myr))
             wct = wallclock.time()
 
-            self.plot_system()
-        
-            
             self.gravity_code.evolve_model(time_next)
             self.wct_gravity += (wallclock.time()-wct) | units.s
             self.flag_colliding_stars()
